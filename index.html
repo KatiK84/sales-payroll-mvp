@@ -211,7 +211,8 @@ function calcFixed(e, base) {
 // ══════════════════════════════════════════════════════════════════════
 // HELPERS
 // ══════════════════════════════════════════════════════════════════════
-const s  = v => v == null ? '' : String(v).trim();
+function excelDateToStr(serial){const d=new Date(Math.round((serial-25569)*86400*1000));const dd=String(d.getUTCDate()).padStart(2,"0");const mm=String(d.getUTCMonth()+1).padStart(2,"0");return dd+"."+mm+"."+d.getUTCFullYear()+" "+String(d.getUTCHours()).padStart(2,"0")+":"+String(d.getUTCMinutes()).padStart(2,"0");}
+const s=v=>{if(v==null)return"";if(typeof v==="number"&&v>40000&&v<70000)return excelDateToStr(v);return String(v).trim();};
 const n  = v => { if (v==null||v==='') return 0; const x=parseFloat(String(v).replace(',','.')); return isNaN(x)?0:x; };
 const fmt= v => { if(!v&&v!==0)return'—'; if(v===0)return'0,00'; return v.toLocaleString('de-DE',{minimumFractionDigits:2,maximumFractionDigits:2}); };
 
@@ -670,7 +671,7 @@ function go(file) {
     try {
       const wb=XLSX.read(e.target.result,{type:'array',cellDates:true});
       SHEET=wb.SheetNames[0];
-      RAW=XLSX.utils.sheet_to_json(wb.Sheets[SHEET],{header:1,defval:null,raw:false});
+      RAW=XLSX.utils.sheet_to_json(wb.Sheets[SHEET],{header:1,defval:null,raw:true});
       fullRun();
     } catch(err) {
       document.getElementById('cards').innerHTML=`<div class="eb"><h4>Ошибка</h4>${err.message}</div>`;
