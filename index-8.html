@@ -1,0 +1,1087 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Sales Payroll MVP v0.8</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f0f2f5;color:#1a1a2e;font-size:14px}
+.app{max-width:1260px;margin:0 auto;padding:20px 16px}
+h1{font-size:20px;font-weight:700}
+.sub{font-size:12px;color:#666;margin-top:3px;margin-bottom:18px}
+.ua{background:#fff;border:2px dashed #c0cae0;border-radius:12px;padding:32px 24px;text-align:center;margin-bottom:16px;cursor:pointer;transition:border-color .2s}
+.ua:hover{border-color:#4f7fff}
+.ua .ico{font-size:28px;margin-bottom:8px}
+.ua p{font-size:13px;color:#555;margin-bottom:4px}
+.ua .hint{font-size:11px;color:#aaa;margin-bottom:12px}
+.bup{display:inline-block;background:#4f7fff;color:#fff;padding:8px 18px;border-radius:8px;font-size:13px;font-weight:500;cursor:pointer}
+.panel{background:#fff;border-radius:12px;padding:20px;box-shadow:0 1px 6px rgba(0,0,0,.07);margin-bottom:14px}
+.tabs{display:flex;border-bottom:2px solid #eee;margin-bottom:18px;flex-wrap:wrap}
+.tab{padding:8px 14px;border:none;background:none;cursor:pointer;font-size:12px;color:#888;border-bottom:2px solid transparent;margin-bottom:-2px;white-space:nowrap;font-weight:500}
+.tab:hover{color:#4f7fff}.tab.active{color:#4f7fff;border-bottom-color:#4f7fff}
+.pane{display:none}.pane.active{display:block}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:14px}
+.card{background:#f7f9ff;border-radius:10px;padding:12px 14px;border:1px solid #e8ecf8}
+.card.g{border-color:#a8e6b8;background:#f0fff4}.card.b{border-color:#93c5fd;background:#eff6ff}
+.card.r{border-color:#ffb8b8;background:#fff4f4}.card.y{border-color:#fcd34d;background:#fffbeb}
+.card.v{border-color:#c4b5fd;background:#faf5ff}
+.clbl{font-size:10px;color:#999;text-transform:uppercase;letter-spacing:.04em;margin-bottom:4px}
+.cval{font-size:19px;font-weight:700}.csm{font-size:15px}
+.card.g .cval{color:#1a7a3a}.card.b .cval{color:#1e40af}
+.card.r .cval{color:#c0392b}.card.y .cval{color:#92400e}.card.v .cval{color:#6d28d9}
+.csub{font-size:10px;color:#aaa;margin-top:2px}
+.mbx{background:#f7f9ff;border-radius:8px;padding:12px 14px;font-size:12px;border:1px solid #e8ecf8;margin-bottom:12px}
+.mrow{display:flex;gap:10px;margin-bottom:4px}
+.mk{color:#888;min-width:130px;flex-shrink:0}.mv{font-weight:500}
+.ok-box{background:#f0fff4;border:1px solid #a8e6b8;border-radius:8px;padding:12px 14px;font-size:12px;color:#1a7a3a;margin-bottom:10px}
+.wb{background:#fffbe6;border:1px solid #fcd34d;border-radius:8px;padding:12px 14px;font-size:12px;color:#7a5c00;margin-bottom:10px}
+.eb{background:#fff4f4;border:1px solid #ffb0b0;border-radius:8px;padding:11px 14px;margin-bottom:10px;font-size:12px;color:#c0392b}
+.eb h4{margin-bottom:6px;font-size:13px;font-weight:600}
+.vb{background:#faf5ff;border:1px solid #c4b5fd;border-radius:8px;padding:11px 14px;margin-bottom:10px;font-size:12px;color:#6d28d9}
+.vb h4{margin-bottom:6px;font-size:13px;font-weight:600}
+.sh{font-size:13px;font-weight:600;color:#333;margin-bottom:12px;padding-bottom:7px;border-bottom:1px solid #eee}
+.tw{overflow-x:auto;border-radius:8px;border:1px solid #eee;margin-bottom:12px}
+table{width:100%;border-collapse:collapse;font-size:12px}
+thead th{background:#f7f9ff;padding:8px 10px;text-align:left;font-weight:600;color:#555;border-bottom:2px solid #eee;white-space:nowrap}
+tbody td{padding:7px 10px;border-bottom:1px solid #f5f5f5;vertical-align:middle}
+tbody tr:last-child td{border-bottom:none}
+tbody tr:hover td{background:#f9fbff}
+.trow{background:#f0fff4;font-weight:600}
+.tlbl{text-align:right;padding-right:14px;color:#666;font-size:11px}
+.rcol{color:#666;font-size:11px;max-width:220px;white-space:normal}
+.bdet{color:#1e40af;font-size:10px}.pdet{color:#6d28d9;font-size:10px}
+.pill{display:inline-block;padding:2px 7px;border-radius:4px;font-size:10px;font-weight:500;white-space:nowrap}
+.py{background:#fff3cd;color:#856404}.pg{background:#d1f7e0;color:#1a7a3a}
+.pgr{background:#f0f0f0;color:#666}.pb{background:#dbeafe;color:#1e40af}
+.pp{background:#ede9fe;color:#6d28d9}.pr{background:#fee2e2;color:#b91c1c}
+.fs{background:linear-gradient(135deg,#f0fff4,#e8f4fd);border:1px solid #a8d8b8;border-radius:10px;padding:14px 18px;margin-bottom:14px;display:flex;align-items:center;gap:20px;flex-wrap:wrap}
+.fsv{font-size:22px;font-weight:700;color:#1a7a3a}.fsl{font-size:11px;color:#4a9a6a;margin-bottom:2px}.fsi{font-size:12px;color:#666}
+.spin{width:24px;height:24px;border:3px solid #eee;border-top-color:#4f7fff;border-radius:50%;animation:spin .7s linear infinite;margin:0 auto 8px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading{text-align:center;padding:26px;color:#888;font-size:12px}
+.mono{font-family:monospace;font-size:11px}
+.tg{color:#1a7a3a;font-weight:600}.tm{color:#aaa}.tb{color:#1e40af;font-weight:600}.tv{color:#6d28d9;font-weight:600}.fw{font-weight:700}
+.btn{padding:6px 13px;border-radius:7px;cursor:pointer;font-size:12px;font-weight:500;border:1.5px solid;background:#fff}
+.btn-p{background:#4f7fff;color:#fff;border-color:#4f7fff}.btn-p:hover{background:#3a6aee}
+.btn-s{color:#444;border-color:#d0d4e0}.btn-s:hover{background:#f5f6fa}
+.btn-d{color:#c0392b;border-color:#ffb0b0}.btn-d:hover{background:#fff4f4}
+.btn-ok{background:#1a7a3a;color:#fff;border-color:#1a7a3a}.btn-ok:hover{background:#145c2c}
+.btn-sm{padding:4px 10px;font-size:11px;border-radius:5px}
+.dtb{display:flex;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap}
+.dtb h2{font-size:13px;font-weight:600;flex:1}
+.mcards{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:11px}
+.mc{background:#f9fafb;border:1.5px solid #e0e4ec;border-radius:10px;padding:13px 14px;position:relative}
+.mc:hover{border-color:#b0bce0}
+.frow{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:7px}
+.frow.full{grid-template-columns:1fr}
+.fld label{display:block;font-size:10px;color:#888;font-weight:600;text-transform:uppercase;letter-spacing:.04em;margin-bottom:3px}
+.fld input,.fld select{width:100%;border:1px solid #d0d4e0;border-radius:6px;padding:5px 8px;font-size:12px;background:#fff;color:#1a1a2e;outline:none}
+.fld input:focus,.fld select:focus{border-color:#4f7fff}
+.fld input:disabled,.fld select:disabled{background:#f5f5f5;color:#bbb;cursor:not-allowed}
+.cact{display:flex;gap:6px;margin-top:9px;justify-content:flex-end;border-top:1px solid #eee;padding-top:9px}
+.trow2{display:flex;align-items:center;gap:10px;margin-bottom:10px;padding:8px 12px;border-radius:8px}
+.trow2.on{background:#f0fff4;border:1px solid #a8e6b8}.trow2.off{background:#fff4f4;border:1px solid #ffb0b0}
+.tlbl2{font-size:12px;font-weight:600;flex:1}
+.tlbl2.on{color:#1a7a3a}.tlbl2.off{color:#c0392b}
+.tbtn{position:relative;width:44px;height:24px;border-radius:12px;border:none;cursor:pointer;flex-shrink:0;transition:background .2s}
+.tbtn.on{background:#34c759}.tbtn.off{background:#ccc}
+.tbtn::after{content:'';position:absolute;width:18px;height:18px;border-radius:50%;background:#fff;top:3px;transition:left .2s}
+.tbtn.on::after{left:23px}.tbtn.off::after{left:3px}
+.bsec{margin-top:10px;padding-top:10px;border-top:1px dashed #ddd}
+.bsec h5{font-size:10px;font-weight:700;color:#1e40af;text-transform:uppercase;letter-spacing:.04em;margin-bottom:8px;display:flex;align-items:center;gap:8px}
+.bstep{display:grid;grid-template-columns:1fr 1fr auto;gap:6px;margin-bottom:6px;align-items:center}
+.bstep input{border:1px solid #d0d4e0;border-radius:6px;padding:5px 8px;font-size:12px;background:#fff;width:100%;outline:none}
+.bstep input:focus{border-color:#1e40af}
+.bdel{background:none;border:none;cursor:pointer;color:#c0392b;font-size:14px;padding:2px 4px}
+.badd{font-size:11px;color:#1e40af;background:none;border:1px solid #bfdbfe;border-radius:5px;padding:4px 10px;cursor:pointer}
+.badd:hover{background:#eff6ff}
+.psec{margin-top:10px;padding:10px 12px;border:1px dashed #c4b5fd;border-radius:8px;background:#faf5ff}
+.psec h5{font-size:10px;font-weight:700;color:#6d28d9;text-transform:uppercase;letter-spacing:.04em;margin-bottom:8px}
+.hlist{display:flex;flex-direction:column;gap:10px}
+.hcard{background:#f7f9ff;border:1.5px solid #e0e4ec;border-radius:10px;padding:14px 16px;cursor:pointer}
+.hcard:hover{border-color:#4f7fff}.hcard.open{border-color:#4f7fff;background:#f0f4ff}
+.hhead{display:flex;align-items:center;gap:12px;margin-bottom:8px}
+.hhead strong{font-size:14px}.hdate{font-size:11px;color:#aaa;flex:1}
+.hstats{display:flex;gap:16px;font-size:12px;flex-wrap:wrap}.hmeta{color:#aaa;font-size:11px}
+.pdet2{background:#fff;border:1px solid #e0e4ec;border-radius:10px;padding:16px;margin-top:8px}
+.stabs{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:14px}
+.stab{padding:5px 12px;border:1.5px solid #d0d4e0;border-radius:6px;cursor:pointer;font-size:11px;font-weight:500;color:#666;background:#fff}
+.stab:hover{border-color:#4f7fff;color:#4f7fff}.stab.active{background:#4f7fff;border-color:#4f7fff;color:#fff}
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <h1>💰 Sales Payroll MVP</h1>
+    <p class="sub">v0.8 · Фикс + Бонус + Провизион + Дедупликация + История · Frontend only · GitHub Pages</p>
+  </header>
+
+  <!-- XLSX Upload -->
+  <div class="ua" id="ua" onclick="document.getElementById('fi').click()">
+    <div class="ico">📂</div>
+    <p>Загрузите Excel-файл отчёта по поступлениям</p>
+    <p class="hint">.xlsx — выгрузка из ERP/1С</p>
+    <input type="file" id="fi" accept=".xlsx,.xls" style="display:none"
+           onchange="if(this.files[0])handleXLSX(this.files[0])">
+    <span class="bup" onclick="event.stopPropagation();document.getElementById('fi').click()">Выбрать файл</span>
+  </div>
+
+  <!-- Main tabs panel -->
+  <div class="panel">
+    <div class="tabs">
+      <button class="tab active" onclick="goTab('ov')">Обзор</button>
+      <button class="tab" onclick="goTab('fp')">🧮 Реестр выплат</button>
+      <button class="tab" onclick="goTab('prov')">📦 Провизион</button>
+      <button class="tab" onclick="goTab('ded')">🔍 Дубли оплат</button>
+      <button class="tab" onclick="goTab('hist')">📅 История</button>
+      <button class="tab" onclick="goTab('mgr')">⚙️ Менеджеры</button>
+      <button class="tab" onclick="goTab('prev')">Предпросмотр</button>
+      <button class="tab" onclick="goTab('str')">Структура</button>
+    </div>
+
+    <div class="pane active" id="pane-ov"><div id="ov"></div></div>
+    <div class="pane" id="pane-fp"><div id="fp"></div></div>
+    <div class="pane" id="pane-prov">
+      <div class="stabs">
+        <button class="stab active" onclick="goStab('prov-deals')">Реестр сделок JTL</button>
+        <button class="stab" onclick="goStab('prov-plat')">Настройки платформ</button>
+      </div>
+      <div id="prov-deals"></div>
+      <div id="prov-plat" style="display:none"></div>
+    </div>
+    <div class="pane" id="pane-ded"><div id="ded"></div></div>
+    <div class="pane" id="pane-hist"><div id="hist"></div></div>
+    <div class="pane" id="pane-mgr"><div id="mgr"></div></div>
+    <div class="pane" id="pane-prev"><div id="prev"></div></div>
+    <div class="pane" id="pane-str"><div id="str"></div></div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script>
+'use strict';
+
+// ═══════════════════════════════════════════════════════════
+// CONFIG
+// ═══════════════════════════════════════════════════════════
+const COL = { date:0,counterpart:3,manager:4,article:7,name:8,qty:12,received:14,goodsNoVat:15,serviceNoVat:16 };
+
+const DEFAULT_MANAGERS = [
+  { manager_name:'David K.', активен:true, режим_фикса:'по группе', группа_фикса:'удалённый менеджер', тип_занятости:'полная занятость',
+    бонусы:[{планка:35000,бонус:200},{планка:40000,бонус:300}],
+    настройки_провизиона:{тип_ставки:'фиксированный процент',процент:4,есть_порог:true,минимум_поступлений:25000,логика_порога:'считать только с суммы сверх порога'} },
+  { manager_name:'Leonid S', активен:true, режим_фикса:'по группе', группа_фикса:'удалённый менеджер', тип_занятости:'частичная занятость', бонусы:[], настройки_провизиона:null },
+  { manager_name:'Volodymyr', активен:true, режим_фикса:'по группе', группа_фикса:'фикс независимо от поступлений', тип_занятости:'полная занятость', бонусы:[], настройки_провизиона:null },
+  { manager_name:'Volodymyr ', активен:true, режим_фикса:'по группе', группа_фикса:'фикс независимо от поступлений', тип_занятости:'полная занятость', бонусы:[], настройки_провизиона:null },
+  { manager_name:'B2B Allianz', активен:true, режим_фикса:'по группе', группа_фикса:'без оклада', тип_занятости:'полная занятость', бонусы:[], настройки_провизиона:null },
+];
+
+const DEFAULT_PROV = { excludedPlatforms:['Ebay-Kleinanzeigen_MGH','B-Stock','Troostwijk','Restado','Faire'], allPlatforms:[] };
+
+// ═══════════════════════════════════════════════════════════
+// STORAGE
+// ═══════════════════════════════════════════════════════════
+const LS = { mgr:'spm_mgr', dedup:'spm_dedup', hist:'spm_hist', deals:'spm_deals', ddDedup:'spm_ddDedup', prov:'spm_prov' };
+
+function lsGet(k,def) { try { const v=localStorage.getItem(k); return v?JSON.parse(v):def; } catch(e){ return def; } }
+function lsSet(k,v) { try { localStorage.setItem(k,JSON.stringify(v)); } catch(e){} }
+
+function loadMgr()   { return lsGet(LS.mgr, JSON.parse(JSON.stringify(DEFAULT_MANAGERS))); }
+function saveMgr(v)  { lsSet(LS.mgr,v); }
+function loadDedup() { return new Set(lsGet(LS.dedup,[])); }
+function saveDedup(s){ lsSet(LS.dedup,[...s]); }
+function loadHist()  { return lsGet(LS.hist,[]); }
+function saveHist(v) { lsSet(LS.hist,v); }
+function loadDeals() { return lsGet(LS.deals,[]); }
+function saveDeals(v){ lsSet(LS.deals,v); }
+function loadDDDedup(){ return new Set(lsGet(LS.ddDedup,[])); }
+function saveDDDedup(s){ lsSet(LS.ddDedup,[...s]); }
+function loadProv()  { return lsGet(LS.prov, JSON.parse(JSON.stringify(DEFAULT_PROV))); }
+function saveProv(v) { lsSet(LS.prov,v); }
+
+// ═══════════════════════════════════════════════════════════
+// APP STATE
+// ═══════════════════════════════════════════════════════════
+const APP = {
+  raw:null, fileName:'', sheetName:'', payroll:null,
+  managers:null, dedup:null, hist:null, deals:null, ddDedup:null, provSettings:null,
+  provFilter:'all', histView:null, currentTab:'ov',
+};
+
+// ═══════════════════════════════════════════════════════════
+// HELPERS
+// ═══════════════════════════════════════════════════════════
+function excelDate(n) {
+  const d=new Date(Math.round((n-25569)*86400*1000));
+  return String(d.getUTCDate()).padStart(2,'0')+'.'+String(d.getUTCMonth()+1).padStart(2,'0')+'.'+d.getUTCFullYear();
+}
+function sv(v) { if(v==null)return''; if(typeof v==='number'&&v>40000&&v<70000)return excelDate(v); return String(v).trim(); }
+function nv(v) { if(v==null||v==='')return 0; const x=parseFloat(String(v).replace(',','.')); return isNaN(x)?0:x; }
+function fmt(v) { if(!v&&v!==0)return'—'; if(v===0)return'0,00'; return v.toLocaleString('de-DE',{minimumFractionDigits:2,maximumFractionDigits:2}); }
+function eh(s) { return String(s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;'); }
+function ini(name) { return (name||'').split(/\s+/).map(w=>w[0]||'').join('').toUpperCase().substring(0,2)||'?'; }
+
+function mpill(m){ return m==='по группе'?`<span class="pill pb">${m}</span>`:m==='вручную'?`<span class="pill pp">${m}</span>`:`<span class="pill pgr">${m||'—'}</span>`; }
+function gpill(g){ return g==='удалённый менеджер'?`<span class="pill py">${g}</span>`:g==='фикс независимо от поступлений'?`<span class="pill pg">${g}</span>`:g==='без оклада'?`<span class="pill pgr">${g}</span>`:`<span class="pill pgr">${g||'—'}</span>`; }
+function epill(e){ return e==='полная занятость'?`<span class="pill pb">${e}</span>`:e==='частичная занятость'?`<span class="pill pgr">${e}</span>`:`<span class="pill pgr">${e||'—'}</span>`; }
+
+// ═══════════════════════════════════════════════════════════
+// TABS
+// ═══════════════════════════════════════════════════════════
+function goTab(id) {
+  APP.currentTab = id;
+  document.querySelectorAll('.tab').forEach((b,i)=>{
+    const tabs=['ov','fp','prov','ded','hist','mgr','prev','str'];
+    b.classList.toggle('active', tabs[i]===id);
+  });
+  document.querySelectorAll('.pane').forEach(p=>p.classList.toggle('active',p.id==='pane-'+id));
+  if(id==='mgr')  renderMgr();
+  if(id==='hist') renderHist();
+  if(id==='prov') { renderDeals(); renderProvPlat(); }
+}
+
+function goStab(id) {
+  document.querySelectorAll('.stab').forEach(b=>b.classList.toggle('active',b.getAttribute('onclick').includes(id)));
+  document.getElementById('prov-deals').style.display = id==='prov-deals'?'':'none';
+  document.getElementById('prov-plat').style.display  = id==='prov-plat'?'':'none';
+  if(id==='prov-deals') renderDeals();
+  if(id==='prov-plat')  renderProvPlat();
+}
+
+// ═══════════════════════════════════════════════════════════
+// ROW CLASSIFICATION
+// ═══════════════════════════════════════════════════════════
+function classify(row) {
+  const f=sv(row[0]), nn=row.filter(v=>v!=null&&v!=='').length;
+  if(nn===0) return 'empty';
+  if(f.includes('Data parameters')||f.includes('Дата начала')||f.includes('Дата окончания')||f.includes('Filter:')) return 'service';
+  if(f==='Фонд'||f==='Документ'||f==='Дата') return 'header';
+  if(row.some(v=>sv(v)==='Документ основание')) return 'header';
+  if(f==='Total'||f==='Итого') return 'total';
+  if(/^0\d\s+фонд\s+/i.test(f)) return 'group';
+  if(/Поступление на расчетный счет\s+\d+/i.test(f)) return 'doc_bank';
+  if(/ПКО\s+[A-Z]+\d+/i.test(f)) return 'doc_cash';
+  if(/^\d{2}\.\d{2}\.\d{4}/.test(f)) return 'data';
+  return 'unknown';
+}
+
+function extractMeta(raw) {
+  const m={};
+  raw.slice(0,10).forEach(row=>{
+    const r=row.map(sv).join(' ');
+    const a=r.match(/Дата начала[:\s]+(\d{2}\.\d{2}\.\d{4})/);
+    const b=r.match(/Дата окончания[:\s]+(\d{2}\.\d{2}\.\d{4})/);
+    if(a)m.start=a[1]; if(b)m.end=b[1];
+    if(r.includes('фонд GH'))m.fund='01 фонд GH';
+  });
+  if(m.start){const p=m.start.split('.');m.month=+p[1];m.year=+p[2];}
+  return m;
+}
+
+function buildRows(raw) {
+  const rows=[]; let fund='',doc='',docType='';
+  raw.forEach(row=>{
+    const t=classify(row);
+    if(t==='group') fund=sv(row[0]);
+    if(t==='doc_bank'){doc=sv(row[0]);docType='bank';}
+    if(t==='doc_cash'){doc=sv(row[0]);docType='cash';}
+    if(t==='data'){
+      const art=sv(row[COL.article]),svc=nv(row[COL.serviceNoVat]),gds=nv(row[COL.goodsNoVat]);
+      rows.push({fund,document:doc,docType,date:sv(row[COL.date]),counterpart:sv(row[COL.counterpart]),
+        manager:sv(row[COL.manager]),article:art,name:sv(row[COL.name]),qty:nv(row[COL.qty]),
+        received:nv(row[COL.received]),goodsNoVat:gds,serviceNoVat:svc,
+        isService:art.includes('EUPL')||(svc>0&&gds===0)});
+    }
+  });
+  return rows;
+}
+
+function dedupRows(rows,registry) {
+  const fresh=[],dupes=[],seen=new Set();
+  rows.forEach(r=>{
+    const k=[sv(r.date).substring(0,10),r.manager,r.counterpart,r.document,Math.round((r.received||0)*100),Math.round((r.goodsNoVat||0)*100)].join('|');
+    r._dk=k;
+    if(registry.has(k)||seen.has(k)){dupes.push(r);}else{seen.add(k);fresh.push(r);}
+  });
+  return{fresh,dupes};
+}
+
+function aggByMgr(rows) {
+  const m={};
+  rows.forEach(r=>{
+    const k=r.manager||'(не указан)';
+    if(!m[k])m[k]={name:k,rows:[],totalReceived:0,goodsSum:0,docs:new Set()};
+    m[k].rows.push(r);m[k].totalReceived+=r.received||0;m[k].goodsSum+=r.goodsNoVat||0;
+    if(r.document)m[k].docs.add(r.document);
+  });
+  return Object.values(m).sort((a,b)=>b.totalReceived-a.totalReceived);
+}
+
+// ═══════════════════════════════════════════════════════════
+// SALARY CALCULATIONS
+// ═══════════════════════════════════════════════════════════
+function calcFixed(e,base) {
+  const mode=e['режим_фикса'];
+  if(!mode)return{fixed:0,rule:'Не указан режим_фикса',err:true};
+  if(mode==='вручную'){
+    const sal=e['ручной_фиксированный_оклад'];
+    if(sal==null||sal==='')return{fixed:0,rule:'вручную: не указан оклад',err:true};
+    const sn=parseFloat(sal);if(isNaN(sn))return{fixed:0,rule:'вручную: оклад не число',err:true};
+    const thr=e['минимальный_порог'],hasThr=thr!=null&&thr!==''&&thr!=='нет';
+    if(hasThr){const tn=parseFloat(thr);if(isNaN(tn))return{fixed:0,rule:'вручную: порог не число',err:true};
+      return base>=tn?{fixed:sn,rule:`вручную: ${sn}, порог ${fmt(tn)} → выплачено`,err:false}:{fixed:0,rule:`вручную: ${sn}, порог ${fmt(tn)} → не достигнут (${fmt(base)})`,err:false};}
+    return{fixed:sn,rule:`вручную: ${sn}, порог нет → выплачено`,err:false};
+  }
+  if(mode==='по группе'){
+    const g=e['группа_фикса'],et=e['тип_занятости'];
+    if(!g)return{fixed:0,rule:'по группе: не указана группа_фикса',err:true};
+    if(!et&&g!=='без оклада')return{fixed:0,rule:'по группе: не указан тип_занятости',err:true};
+    if(g==='без оклада')return{fixed:0,rule:'без оклада → 0',err:false};
+    if(g==='фикс независимо от поступлений'){
+      if(et==='полная занятость')return{fixed:800,rule:'фикс всегда, полная занятость → 800',err:false};
+      if(et==='частичная занятость')return{fixed:400,rule:'фикс всегда, частичная занятость → 400',err:false};
+      return{fixed:0,rule:`неизвестный тип: "${et}"`,err:true};
+    }
+    if(g==='удалённый менеджер'){
+      if(et==='полная занятость')return base>=10000?{fixed:800,rule:'полная занятость ≥ 10 000 → 800',err:false}:{fixed:400,rule:`полная занятость < 10 000 → 400 (база: ${fmt(base)})`,err:false};
+      if(et==='частичная занятость')return base>=5000?{fixed:400,rule:'частичная занятость ≥ 5 000 → 400',err:false}:{fixed:200,rule:`частичная занятость < 5 000 → 200 (база: ${fmt(base)})`,err:false};
+      return{fixed:0,rule:`неизвестный тип: "${et}"`,err:true};
+    }
+    return{fixed:0,rule:`неизвестная группа: "${g}"`,err:true};
+  }
+  return{fixed:0,rule:`неизвестный режим: "${mode}"`,err:true};
+}
+
+function calcBonus(e,base) {
+  const steps=e['бонусы'];
+  if(!steps||!steps.length)return{bonus:0,detail:'',err:false};
+  let total=0;const reached=[];
+  steps.forEach((st,i)=>{
+    const pl=parseFloat(st['планка']),bn=parseFloat(st['бонус']);
+    if(!isNaN(pl)&&!isNaN(bn)&&base>=pl){total+=bn;reached.push(`${fmt(pl)} → +${fmt(bn)}`);}
+  });
+  return{bonus:total,detail:reached.join('; '),err:false};
+}
+
+function calcProv(e,provBase,receipts) {
+  const ps=e['настройки_провизиона'];
+  if(!ps)return{prov:0,rule:'провизион не настроен',err:true};
+  const type=ps['тип_ставки'];
+  if(!type)return{prov:0,rule:'не указан тип_ставки провизиона',err:true};
+  const pct=parseFloat(ps['процент']);
+  if(isNaN(pct)||pct<0)return{prov:0,rule:'процент провизиона не задан или некорректен',err:true};
+  const hasThr=ps['есть_порог']===true;
+  let effectiveBase=provBase,note='';
+  if(hasThr){
+    const minR=parseFloat(ps['минимум_поступлений']);
+    if(isNaN(minR)||minR<0)return{prov:0,rule:'есть_порог=true, но минимум_поступлений некорректен',err:true};
+    if(receipts>=minR){note=`порог ${fmt(minR)} EUR достигнут → `;}
+    else{
+      const logic=ps['логика_порога']||'считать только с суммы сверх порога';
+      if(logic==='считать только с суммы сверх порога'){effectiveBase=Math.max(0,provBase-minR);note=`порог не достигнут, только сверх ${fmt(minR)} EUR (${fmt(effectiveBase)}) → `;}
+      else{note=`порог не достигнут, считать со всей базы → `;}
+    }
+  }
+  const amount=Math.round(effectiveBase*pct/100*100)/100;
+  const label=type==='фиксированный процент'?`фикс. ${pct}%`:`инд. ${pct}%`;
+  return{prov:amount,rule:`${note}${label} от ${fmt(effectiveBase)} = ${fmt(amount)} EUR`,err:false};
+}
+
+// ═══════════════════════════════════════════════════════════
+// PAYROLL ENGINE
+// ═══════════════════════════════════════════════════════════
+function runPayroll() {
+  const raw=APP.raw, managers=APP.managers, dedup=APP.dedup;
+  const allTypes=raw.map(r=>classify(r));
+  const meta=extractMeta(raw);
+  const allRows=buildRows(raw);
+  const{fresh,dupes}=dedupRows(allRows,dedup);
+  const agg=aggByMgr(fresh.filter(r=>!r.isService));
+  const inReport=new Set(agg.map(m=>m.name.trim()));
+  const results=[],errors=[],provErrors=[];
+
+  // Managers in report
+  agg.forEach(m=>{
+    const e=managers.find(d=>d.manager_name.trim()===m.name.trim());
+    if(!e){errors.push({manager:m.name,issue:'Не найден в справочнике',base:m.goodsSum});return;}
+    if(e['активен']===false)return;
+    const fr=calcFixed(e,m.goodsSum);
+    if(fr.err){errors.push({manager:m.name,issue:fr.rule,base:m.goodsSum});return;}
+    const br=calcBonus(e,m.goodsSum);
+    // Provizion base from JTL deals
+    const deals=APP.deals||[];
+    const provBase=deals.filter(d=>(d.status==='авто'||d.status==='вручную_ок'||d.status==='совместная')&&(d.verkaeufer||'').trim()===m.name.trim())
+      .reduce((s,d)=>{
+        if(d.status==='совместная'&&d.joint){const sh=d.joint.find(j=>j.manager.trim()===m.name.trim());return s+(sh?d.gesamtbetrag*sh.pct/100:0);}
+        return s+(d.gesamtbetrag||0);
+      },0);
+    const pr=calcProv(e,provBase,m.totalReceived);
+    if(pr.err)provErrors.push({manager:m.name,issue:pr.rule,provBase,receipts:m.totalReceived});
+    const thr=e['минимальный_порог'],td=(!thr&&thr!==0)?'нет':fmt(parseFloat(thr));
+    results.push({manager:m.name,mode:e['режим_фикса']||'—',group:e['группа_фикса']||'—',empType:e['тип_занятости']||'—',
+      base:m.goodsSum,received:m.totalReceived,threshold:td,
+      fixedSalary:fr.fixed,bonus:br.bonus,bonusDetail:br.detail,
+      provBase,prov:pr.err?0:pr.prov,provRule:pr.rule,provOk:!pr.err,
+      total:fr.fixed+br.bonus+(pr.err?0:pr.prov),rule:fr.rule,inReport:true,rows:m.rows});
+  });
+
+  // Active managers not in report
+  managers.forEach(e=>{
+    if(e['активен']===false)return;
+    if(!e.manager_name||!e.manager_name.trim())return;
+    if(inReport.has(e.manager_name.trim()))return;
+    const fr=calcFixed(e,0);
+    if(fr.err){errors.push({manager:e.manager_name,issue:fr.rule+' (нет в отчёте)',base:0});return;}
+    if(fr.fixed===0)return;
+    const thr=e['минимальный_порог'],td=(!thr&&thr!==0)?'нет':fmt(parseFloat(thr));
+    results.push({manager:e.manager_name,mode:e['режим_фикса']||'—',group:e['группа_фикса']||'—',empType:e['тип_занятости']||'—',
+      base:0,received:0,threshold:td,fixedSalary:fr.fixed,bonus:0,bonusDetail:'',
+      provBase:0,prov:0,provRule:'нет продаж',provOk:false,
+      total:fr.fixed,rule:fr.rule+' (нет продаж в периоде)',inReport:false,rows:[]});
+  });
+
+  return{meta,allTypes,allRows,fresh,dupes,results,errors,provErrors};
+}
+
+// ═══════════════════════════════════════════════════════════
+// FILE LOADING
+// ═══════════════════════════════════════════════════════════
+function handleXLSX(file) {
+  APP.fileName=file.name;
+  ['ov','fp','ded','prev','str'].forEach(id=>{ const el=document.getElementById(id); if(el)el.innerHTML='<div class="loading"><div class="spin"></div>Читаем файл…</div>'; });
+  const reader=new FileReader();
+  reader.onload=function(ev){
+    try{
+      const wb=XLSX.read(ev.target.result,{type:'array',cellDates:false});
+      APP.sheetName=wb.SheetNames[0];
+      APP.raw=XLSX.utils.sheet_to_json(wb.Sheets[APP.sheetName],{header:1,defval:null,raw:true});
+      APP.payroll=runPayroll();
+      renderAll();
+    }catch(e){
+      const el=document.getElementById('ov');
+      if(el)el.innerHTML=`<div class="eb"><h4>Ошибка чтения файла</h4>${e.message}</div>`;
+    }
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+function renderAll() {
+  renderOv(); renderFp(); renderDed(); renderPrev(); renderStr();
+  if(APP.currentTab==='mgr')renderMgr();
+  if(APP.currentTab==='hist')renderHist();
+  if(APP.currentTab==='prov'){renderDeals();renderProvPlat();}
+}
+
+// ═══════════════════════════════════════════════════════════
+// RENDER: OVERVIEW
+// ═══════════════════════════════════════════════════════════
+function renderOv() {
+  if(!APP.payroll)return;
+  const{meta,results,errors,fresh,dupes,allRows,provErrors}=APP.payroll;
+  const MONTHS=['','Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
+  const totFix=results.reduce((x,r)=>x+r.fixedSalary,0);
+  const totBonus=results.reduce((x,r)=>x+(r.bonus||0),0);
+  const totProv=results.reduce((x,r)=>x+(r.prov||0),0);
+  const totTotal=results.reduce((x,r)=>x+(r.total||0),0);
+  document.getElementById('ov').innerHTML=`
+    <div class="cards">
+      <div class="card"><div class="clbl">Позиций</div><div class="cval">${allRows.length}</div><div class="csub">услуги: ${allRows.filter(r=>r.isService).length}</div></div>
+      <div class="card"><div class="clbl">Менеджеров</div><div class="cval">${[...new Set(fresh.map(r=>r.manager).filter(Boolean))].length}</div></div>
+      <div class="card"><div class="clbl">Получено</div><div class="cval csm">${fmt(fresh.reduce((x,r)=>x+(r.received||0),0))}</div><div class="csub">EUR</div></div>
+      <div class="card g"><div class="clbl">Фикс + Бонус</div><div class="cval csm">${fmt(totFix+totBonus)}</div><div class="csub">фикс: ${fmt(totFix)} · бонус: ${fmt(totBonus)}</div></div>
+      <div class="card v"><div class="clbl">Провизион</div><div class="cval csm">${fmt(totProv)}</div></div>
+      <div class="card b"><div class="clbl">Итого к выплате</div><div class="cval csm">${fmt(totTotal)}</div><div class="csub">${results.length} менеджер(а)</div></div>
+      ${errors.length?`<div class="card r"><div class="clbl">Ошибки</div><div class="cval">${errors.length}</div></div>`:''}
+      ${dupes.length?`<div class="card y"><div class="clbl">Дубли</div><div class="cval">${dupes.length}</div><div class="csub">исключено</div></div>`:''}
+    </div>
+    <div class="mbx">
+      <div class="mrow"><span class="mk">Файл</span><span class="mv">${APP.fileName}</span></div>
+      <div class="mrow"><span class="mk">Период</span><span class="mv">${meta.start||'?'} — ${meta.end||'?'}</span></div>
+      ${meta.fund?`<div class="mrow"><span class="mk">Фонд</span><span class="mv">${meta.fund}</span></div>`:''}
+      <div class="mrow"><span class="mk">База фикса</span><span class="mv">col ${COL.goodsNoVat} "За товар без НДС"</span></div>
+    </div>
+    <button class="btn btn-ok" onclick="savePeriod()">💾 Сохранить расчёт${meta.month?' — '+MONTHS[meta.month]+' '+meta.year:''}</button>`;
+}
+
+function savePeriod() {
+  if(!APP.payroll)return;
+  const{meta,results,errors,fresh,dupes}=APP.payroll;
+  if(!meta.month||!meta.year){alert('Не удалось определить период.');return;}
+  fresh.forEach(r=>APP.dedup.add(r._dk));
+  saveDedup(APP.dedup);
+  const MONTHS=['','Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
+  const key=`${meta.year}-${String(meta.month).padStart(2,'0')}`;
+  const hist=APP.hist.filter(h=>`${h.year}-${String(h.month).padStart(2,'0')}`!==key);
+  hist.unshift({month:meta.month,year:meta.year,savedAt:new Date().toISOString(),fileName:APP.fileName,
+    summary:results.map(r=>({manager:r.manager,base:r.base,fixedSalary:r.fixedSalary,bonus:r.bonus,prov:r.prov||0,total:r.total,rule:r.rule,bonusDetail:r.bonusDetail,provRule:r.provRule})),
+    errors,freshCount:fresh.length,dupeCount:dupes.length});
+  APP.hist=hist.slice(0,24);
+  saveHist(APP.hist);
+  alert(`${MONTHS[meta.month]} ${meta.year} сохранён.`);
+  renderHist();
+}
+
+// ═══════════════════════════════════════════════════════════
+// RENDER: FIXED/PAYROLL TABLE
+// ═══════════════════════════════════════════════════════════
+function renderFp() {
+  if(!APP.payroll){document.getElementById('fp').innerHTML='';return;}
+  const{meta,results,errors,provErrors}=APP.payroll;
+  const totFix=results.reduce((x,r)=>x+r.fixedSalary,0);
+  const totBonus=results.reduce((x,r)=>x+(r.bonus||0),0);
+  const totProv=results.reduce((x,r)=>x+(r.prov||0),0);
+  const totTotal=results.reduce((x,r)=>x+(r.total||0),0);
+  const period=(meta.start&&meta.end)?`${meta.start} — ${meta.end}`:'—';
+  let h=`<div class="fs">
+    <div><div class="fsl">Фикс</div><div class="fsv">${fmt(totFix)} EUR</div></div>
+    <div><div class="fsl">Бонус</div><div class="fsv" style="color:#1e40af">${fmt(totBonus)} EUR</div></div>
+    <div><div class="fsl">Провизион</div><div class="fsv" style="color:#6d28d9">${fmt(totProv)} EUR</div></div>
+    <div style="border-left:2px solid #a8d8b8;padding-left:20px">
+      <div class="fsl" style="font-weight:700">Итого к выплате</div>
+      <div class="fsv" style="font-size:26px">${fmt(totTotal)} EUR</div>
+    </div>
+    <div class="fsi">${results.length} менеджер(а) · ${period}</div>
+  </div>`;
+  if(results.length){
+    h+=`<div class="tw"><table><thead><tr>
+      <th>Менеджер</th><th>Режим</th><th>Группа</th><th>Тип занятости</th>
+      <th style="text-align:right">База, EUR</th><th style="text-align:right">Порог</th>
+      <th style="text-align:right">Фикс, EUR</th><th style="text-align:right">Бонус, EUR</th>
+      <th style="text-align:right">Провизион, EUR</th><th style="text-align:right">Итого, EUR</th>
+      <th>Правило</th>
+    </tr></thead><tbody>
+    ${results.map(r=>`<tr>
+      <td><strong>${r.manager}</strong>${!r.inReport?'<br><span style="font-size:10px;color:#aaa">нет продаж</span>':''}</td>
+      <td>${mpill(r.mode)}</td><td>${gpill(r.group)}</td><td>${epill(r.empType)}</td>
+      <td style="text-align:right" class="mono">${r.inReport?fmt(r.base):'—'}</td>
+      <td style="text-align:right" class="mono">${r.threshold}</td>
+      <td style="text-align:right" class="mono ${r.fixedSalary>0?'tg':'tm'}">${fmt(r.fixedSalary)}</td>
+      <td style="text-align:right" class="mono ${(r.bonus||0)>0?'tb':'tm'}">${fmt(r.bonus||0)}</td>
+      <td style="text-align:right" class="mono ${(r.prov||0)>0?'tv':'tm'}">${fmt(r.prov||0)}</td>
+      <td style="text-align:right" class="mono fw">${fmt(r.total||0)}</td>
+      <td class="rcol">${r.rule}${r.bonusDetail?`<br><span class="bdet">${r.bonusDetail}</span>`:''}${r.provOk&&r.provRule?`<br><span class="pdet">${r.provRule}</span>`:''}${!r.provOk&&r.inReport?'<br><span class="tm" style="font-size:9px">провизион не настроен</span>':''}</td>
+    </tr>`).join('')}
+    <tr class="trow"><td colspan="6" class="tlbl">Итого:</td>
+      <td class="mono tg">${fmt(totFix)}</td><td class="mono tb">${fmt(totBonus)}</td>
+      <td class="mono tv">${fmt(totProv)}</td><td class="mono fw">${fmt(totTotal)}</td><td></td>
+    </tr></tbody></table></div>`;
+  }
+  if(errors.length){
+    h+=`<div class="eb" style="margin-top:14px"><h4>⚠ Ошибки (${errors.length})</h4>
+    <div class="tw"><table><thead><tr><th style="background:#fff4f4;color:#c0392b">Менеджер</th><th style="background:#fff4f4;color:#c0392b">Проблема</th><th style="background:#fff4f4;color:#c0392b;text-align:right">База</th></tr></thead>
+    <tbody>${errors.map(e=>`<tr><td>${e.manager}</td><td>${e.issue}</td><td style="text-align:right" class="mono">${fmt(e.base)}</td></tr>`).join('')}</tbody></table></div></div>`;
+  }
+  if(provErrors&&provErrors.length){
+    h+=`<div class="vb" style="margin-top:10px"><h4>💜 Провизион не настроен (${provErrors.length})</h4>
+    <div class="tw"><table><thead><tr><th style="background:#faf5ff;color:#6d28d9">Менеджер</th><th style="background:#faf5ff;color:#6d28d9">Проблема</th><th style="background:#faf5ff;color:#6d28d9;text-align:right">База провизиона</th><th style="background:#faf5ff;color:#6d28d9;text-align:right">Поступления</th></tr></thead>
+    <tbody>${provErrors.map(e=>`<tr><td>${e.manager}</td><td>${e.issue}</td><td style="text-align:right" class="mono">${fmt(e.provBase)}</td><td style="text-align:right" class="mono">${fmt(e.receipts)}</td></tr>`).join('')}</tbody></table></div>
+    <p style="margin-top:8px;font-size:11px">Настройте провизион в разделе «⚙️ Менеджеры».</p></div>`;
+  }
+  document.getElementById('fp').innerHTML=h;
+}
+
+// ═══════════════════════════════════════════════════════════
+// RENDER: DEDUP
+// ═══════════════════════════════════════════════════════════
+function renderDed() {
+  if(!APP.payroll){document.getElementById('ded').innerHTML='';return;}
+  const{fresh,dupes}=APP.payroll;
+  let h='';
+  if(!dupes.length){h=`<div class="ok-box">✓ Дублей не обнаружено. Все ${fresh.length} строк — новые.</div>`;}
+  else{h=`<div class="wb">Обнаружено <strong>${dupes.length}</strong> дублирующихся строк — исключены. Новых: <strong>${fresh.length}</strong>.</div>
+    <div class="tw"><table><thead><tr><th>Дата</th><th>Менеджер</th><th>Контрагент</th><th>Документ</th>
+    <th style="text-align:right">Получено</th><th style="text-align:right">Товар б/НДС</th><th>Статус</th></tr></thead>
+    <tbody>${dupes.slice(0,50).map(r=>`<tr><td>${r.date}</td><td>${r.manager}</td><td>${r.counterpart}</td>
+    <td class="mono" style="font-size:10px">${(r.document||'').substring(0,35)}</td>
+    <td style="text-align:right" class="mono">${fmt(r.received)}</td><td style="text-align:right" class="mono">${fmt(r.goodsNoVat)}</td>
+    <td><span class="pill pr">дубль</span></td></tr>`).join('')}
+    ${dupes.length>50?`<tr><td colspan="7" style="text-align:center;color:#aaa">…ещё ${dupes.length-50}</td></tr>`:''}</tbody></table></div>`;}
+  h+=`<div style="margin-top:10px"><button class="btn btn-s btn-sm" onclick="clearDedup()">Очистить реестр дублей</button></div>`;
+  document.getElementById('ded').innerHTML=h;
+}
+function clearDedup(){if(!confirm('Очистить реестр дублей?'))return;APP.dedup=new Set();saveDedup(APP.dedup);if(APP.raw){APP.payroll=runPayroll();renderAll();}}
+
+// ═══════════════════════════════════════════════════════════
+// RENDER: PREVIEW
+// ═══════════════════════════════════════════════════════════
+function renderPrev() {
+  if(!APP.payroll){document.getElementById('prev').innerHTML='';return;}
+  const rows=APP.payroll.allRows,prev=rows.slice(0,30);
+  document.getElementById('prev').innerHTML=`<p style="font-size:11px;color:#999;margin-bottom:8px">Первые ${prev.length} из ${rows.length}.</p>
+    <div class="tw"><table><thead><tr><th>Тип</th><th>Дата</th><th>Менеджер</th><th>Контрагент</th>
+    <th>Артикул</th><th>Наименование</th><th style="text-align:right">Получено</th>
+    <th style="text-align:right">Товар б/НДС</th><th style="text-align:right">Услуги б/НДС</th><th>Документ</th></tr></thead>
+    <tbody>${prev.map(r=>`<tr><td><span class="pill ${r.isService?'pr':'pg'}">${r.isService?'услуга':'товар'}</span></td>
+    <td>${r.date}</td><td>${r.manager}</td><td>${r.counterpart}</td><td class="mono">${r.article}</td>
+    <td title="${r.name}">${r.name.substring(0,24)}${r.name.length>24?'…':''}</td>
+    <td style="text-align:right" class="mono">${fmt(r.received)}</td>
+    <td style="text-align:right" class="mono ${!r.isService?'tg':''}">${fmt(r.goodsNoVat)}</td>
+    <td style="text-align:right" class="mono">${fmt(r.serviceNoVat)}</td>
+    <td style="font-size:10px">${r.docType==='bank'?'🏦 банк':'💵 касса'}</td></tr>`).join('')}
+    </tbody></table></div>`;
+}
+
+// ═══════════════════════════════════════════════════════════
+// RENDER: STRUCTURE
+// ═══════════════════════════════════════════════════════════
+function renderStr() {
+  if(!APP.payroll){document.getElementById('str').innerHTML='';return;}
+  const{allTypes}=APP.payroll,raw=APP.raw;
+  const gs=[{t:'service',l:'Служебные строки',bg:'#fffbe6',bc:'#ffe066',tc:'#7a6000'},
+    {t:'header',l:'Заголовки',bg:'#eff6ff',bc:'#bfdbfe',tc:'#1e40af'},
+    {t:'group',l:'Группа фонда',bg:'#f0fff4',bc:'#a8d8b8',tc:'#1a7a3a'},
+    {t:'doc_bank',l:'Банк. документ',bg:'#f5f5f5',bc:'#d0d0d0',tc:'#555'},
+    {t:'doc_cash',l:'ПКО',bg:'#f5f5f5',bc:'#d0d0d0',tc:'#555'},
+    {t:'data',l:'Позиция данных',bg:'#fff',bc:'#e0e0e0',tc:'#333'},
+    {t:'total',l:'Итоговая строка',bg:'#f5f0ff',bc:'#d0b8ff',tc:'#6a1a9a'}];
+  let h='<div style="background:#f7f9ff;border-radius:10px;padding:13px;border:1px solid #e8ecf8">';
+  gs.forEach(g=>{
+    const cnt=allTypes.filter(t=>t===g.t).length;if(!cnt)return;
+    const idx=allTypes.findIndex(t=>t===g.t),sv2=idx>=0?sv(raw[idx][0]).substring(0,55):'';
+    h+=`<div style="display:flex;align-items:flex-start;gap:8px;padding:7px 10px;border-radius:6px;margin-bottom:4px;background:${g.bg};border:1px solid ${g.bc}">
+      <span style="display:inline-block;padding:2px 6px;border-radius:4px;font-size:10px;font-weight:600;background:${g.bc};color:${g.tc};min-width:42px;text-align:center">${cnt}</span>
+      <strong style="font-size:11px;color:${g.tc}">${g.l}</strong>
+      ${sv2?`<code style="font-size:10px;color:#888;margin-left:6px">"${sv2}${sv2.length===55?'…':''}"</code>`:''}</div>`;
+  });
+  document.getElementById('str').innerHTML=h+'</div>';
+}
+
+// ═══════════════════════════════════════════════════════════
+// RENDER: HISTORY
+// ═══════════════════════════════════════════════════════════
+function renderHist() {
+  const MONTHS=['','Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
+  const cont=document.getElementById('hist');if(!cont)return;
+  const hist=APP.hist;
+  if(!hist.length){cont.innerHTML='<div style="color:#aaa;padding:20px 0">Нет сохранённых периодов.</div>';return;}
+  let h='<div class="hlist">';
+  hist.forEach(p=>{
+    const key=`${p.year}-${String(p.month).padStart(2,'0')}`;
+    const totFix=p.summary.reduce((x,r)=>x+r.fixedSalary,0);
+    const totBonus=p.summary.reduce((x,r)=>x+r.bonus,0);
+    const totProv=p.summary.reduce((x,r)=>x+(r.prov||0),0);
+    const totTotal=p.summary.reduce((x,r)=>x+r.total,0);
+    const isOpen=APP.histView===key;
+    h+=`<div class="hcard ${isOpen?'open':''}" onclick="toggleHist('${key}')">
+      <div class="hhead"><strong>${MONTHS[p.month]} ${p.year}</strong>
+        <span class="hdate">${new Date(p.savedAt).toLocaleDateString('ru-RU')}</span>
+        <button class="btn btn-d btn-sm" onclick="event.stopPropagation();deleteHist('${key}')">✕</button>
+      </div>
+      <div class="hstats">
+        <span>Фикс: <strong>${fmt(totFix)} EUR</strong></span>
+        <span>Бонус: <strong>${fmt(totBonus)} EUR</strong></span>
+        <span>Провизион: <strong>${fmt(totProv)} EUR</strong></span>
+        <span>Итого: <strong class="tg">${fmt(totTotal)} EUR</strong></span>
+        <span class="hmeta">${p.summary.length} менеджер(а) · ${p.freshCount} строк · ${p.dupeCount} дублей</span>
+      </div>
+    </div>
+    ${isOpen?renderHistDetail(p):''}`;
+  });
+  cont.innerHTML=h+'</div>';
+}
+function toggleHist(k){APP.histView=APP.histView===k?null:k;renderHist();}
+function deleteHist(k){if(!confirm('Удалить период?'))return;APP.hist=APP.hist.filter(h=>`${h.year}-${String(h.month).padStart(2,'0')}`!==k);saveHist(APP.hist);if(APP.histView===k)APP.histView=null;renderHist();}
+function renderHistDetail(p){
+  const MONTHS=['','Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
+  const tF=p.summary.reduce((x,r)=>x+r.fixedSalary,0),tB=p.summary.reduce((x,r)=>x+r.bonus,0),tP=p.summary.reduce((x,r)=>x+(r.prov||0),0),tT=p.summary.reduce((x,r)=>x+r.total,0);
+  return `<div class="pdet2"><div class="sh" style="margin-top:14px">Детализация: ${MONTHS[p.month]} ${p.year}</div>
+    <div class="fs" style="margin-bottom:14px">
+      <div><div class="fsl">Фикс</div><div class="fsv">${fmt(tF)} EUR</div></div>
+      <div><div class="fsl">Бонус</div><div class="fsv" style="color:#1e40af">${fmt(tB)} EUR</div></div>
+      <div><div class="fsl">Провизион</div><div class="fsv" style="color:#6d28d9">${fmt(tP)} EUR</div></div>
+      <div style="border-left:2px solid #a8d8b8;padding-left:18px"><div class="fsl" style="font-weight:700">Итого к выплате</div><div class="fsv">${fmt(tT)} EUR</div></div>
+    </div>
+    <div class="tw"><table><thead><tr><th>Менеджер</th><th style="text-align:right">База</th>
+      <th style="text-align:right">Фикс</th><th style="text-align:right">Бонус</th>
+      <th style="text-align:right">Провизион</th><th style="text-align:right">Итого</th><th>Правило</th></tr></thead>
+    <tbody>${p.summary.map(r=>`<tr><td><strong>${r.manager}</strong></td>
+      <td style="text-align:right" class="mono">${fmt(r.base)}</td>
+      <td style="text-align:right" class="mono tg">${fmt(r.fixedSalary)}</td>
+      <td style="text-align:right" class="mono tb">${fmt(r.bonus)}</td>
+      <td style="text-align:right" class="mono tv">${fmt(r.prov||0)}</td>
+      <td style="text-align:right" class="mono fw">${fmt(r.total)}</td>
+      <td class="rcol">${r.rule}</td></tr>`).join('')}
+    <tr class="trow"><td class="tlbl" colspan="2">Итого:</td>
+      <td class="mono tg">${fmt(tF)}</td><td class="mono tb">${fmt(tB)}</td>
+      <td class="mono tv">${fmt(tP)}</td><td class="mono fw">${fmt(tT)}</td><td></td></tr>
+    </tbody></table></div></div>`;
+}
+
+// ═══════════════════════════════════════════════════════════
+// RENDER: MANAGER EDITOR
+// ═══════════════════════════════════════════════════════════
+function renderMgr() {
+  const cont=document.getElementById('mgr');if(!cont)return;
+  const mgrs=APP.managers;
+  let h=`<div class="dtb"><h2>⚙️ Менеджеры (${mgrs.length})</h2>
+    <button class="btn btn-s btn-sm" onclick="addMgr()">+ Добавить</button>
+    ${APP.raw?`<button class="btn btn-p btn-sm" onclick="rerun()">▶ Пересчитать</button>`:''}
+  </div>
+  <p style="font-size:11px;color:#888;margin-bottom:14px">Отредактируйте и нажмите <strong>Сохранить</strong>.</p>
+  <div class="mcards">`;
+  mgrs.forEach((d,idx)=>{
+    const isM=d['режим_фикса']==='вручную',isA=d['активен']!==false;
+    const thr=d['минимальный_порог'],thrV=(!thr&&thr!==0)?'':thr;
+    const steps=d['бонусы']||[];
+    const ps=d['настройки_провизиона'];
+    h+=`<div class="mc" id="mc${idx}">
+      <div class="trow2 ${isA?'on':'off'}">
+        <span class="tlbl2 ${isA?'on':'off'}">${isA?'✓ Активен':'✗ Неактивен'}</span>
+        <button class="tbtn ${isA?'on':'off'}" onclick="toggleAct(${idx})"></button>
+      </div>
+      <div class="frow full"><div class="fld"><label>Имя менеджера</label>
+        <input type="text" id="fn${idx}" value="${eh(d.manager_name||'')}" placeholder="Имя"></div></div>
+      <div class="frow">
+        <div class="fld"><label>Режим фикса</label>
+          <select id="fm${idx}" onchange="onModeChange(${idx})">
+            <option value="по группе" ${!isM?'selected':''}>по группе</option>
+            <option value="вручную" ${isM?'selected':''}>вручную</option>
+          </select></div>
+        <div class="fld" id="fe${idx}" ${isM?'style="opacity:.4;pointer-events:none"':''}>
+          <label>Тип занятости</label>
+          <select id="fet${idx}" ${isM?'disabled':''}>
+            <option value="полная занятость" ${d['тип_занятости']==='полная занятость'?'selected':''}>полная занятость</option>
+            <option value="частичная занятость" ${d['тип_занятости']==='частичная занятость'?'selected':''}>частичная занятость</option>
+          </select></div>
+      </div>
+      <div class="frow" id="fg${idx}" ${isM?'style="opacity:.4;pointer-events:none"':''}>
+        <div class="fld" style="grid-column:1/-1"><label>Группа фикса</label>
+          <select id="fgr${idx}" ${isM?'disabled':''}>
+            <option value="удалённый менеджер" ${d['группа_фикса']==='удалённый менеджер'?'selected':''}>удалённый менеджер</option>
+            <option value="фикс независимо от поступлений" ${d['группа_фикса']==='фикс независимо от поступлений'?'selected':''}>фикс независимо от поступлений</option>
+            <option value="без оклада" ${d['группа_фикса']==='без оклада'?'selected':''}>без оклада</option>
+          </select></div>
+      </div>
+      <div class="frow" id="fman${idx}" ${!isM?'style="opacity:.4;pointer-events:none"':''}>
+        <div class="fld"><label>Ручной оклад (EUR)</label>
+          <input type="number" id="fsal${idx}" value="${d['ручной_фиксированный_оклад']||''}" placeholder="650" ${!isM?'disabled':''}></div>
+        <div class="fld"><label>Мин. порог (пусто=нет)</label>
+          <input type="number" id="fthr${idx}" value="${thrV}" placeholder="нет" ${!isM?'disabled':''}></div>
+      </div>
+      <!-- Bonus steps -->
+      <div class="bsec">
+        <h5>🎯 Бонусные ступени <button class="badd" onclick="addBonus(${idx})">+ Ступень</button></h5>
+        ${steps.length?`<div style="display:grid;grid-template-columns:1fr 1fr auto;gap:6px;margin-bottom:4px;font-size:10px;color:#aaa"><span>Планка EUR</span><span>Бонус EUR</span><span></span></div>`:''}
+        <div id="bs${idx}">${steps.map((st,si)=>`<div class="bstep">
+          <input type="number" class="bp" placeholder="35000" value="${st['планка']||''}">
+          <input type="number" class="bb" placeholder="200" value="${st['бонус']||''}">
+          <button class="bdel" onclick="delBonus(${idx},${si})">✕</button>
+        </div>`).join('')}</div>
+        ${!steps.length?'<p style="font-size:11px;color:#bbb;margin-top:4px">Нет ступеней</p>':''}
+      </div>
+      <!-- Provizion settings -->
+      <div class="psec">
+        <h5>💜 Настройки провизиона</h5>
+        <div class="frow">
+          <div class="fld"><label>Тип ставки</label>
+            <select id="pt${idx}">
+              <option value="">— не настроен —</option>
+              <option value="фиксированный процент" ${ps&&ps['тип_ставки']==='фиксированный процент'?'selected':''}>фиксированный %</option>
+              <option value="индивидуальный процент" ${ps&&ps['тип_ставки']==='индивидуальный процент'?'selected':''}>индивидуальный %</option>
+            </select></div>
+          <div class="fld"><label>Процент (%)</label>
+            <input type="number" id="pp${idx}" value="${ps&&ps['процент']!=null?ps['процент']:''}" placeholder="4" min="0" max="100" step="0.1"></div>
+        </div>
+        <div class="frow">
+          <div class="fld" style="display:flex;align-items:center;gap:8px;padding-top:16px">
+            <input type="checkbox" id="ph${idx}" ${ps&&ps['есть_порог']?'checked':''} onchange="togglePH(${idx})" style="width:16px;height:16px">
+            <label for="ph${idx}" style="font-size:12px;color:#555;text-transform:none;letter-spacing:0;margin-bottom:0">Есть порог поступлений</label>
+          </div>
+          <div class="fld" id="phr${idx}" ${!(ps&&ps['есть_порог'])?'style="opacity:.4;pointer-events:none"':''}>
+            <label>Мин. поступлений (EUR)</label>
+            <input type="number" id="pmin${idx}" value="${ps&&ps['минимум_поступлений']!=null?ps['минимум_поступлений']:''}" placeholder="25000" ${!(ps&&ps['есть_порог'])?'disabled':''}></div>
+        </div>
+        <div class="frow" id="plr${idx}" ${!(ps&&ps['есть_порог'])?'style="opacity:.4;pointer-events:none"':''}>
+          <div class="fld" style="grid-column:1/-1"><label>Логика при недостижении порога</label>
+            <select id="pl${idx}" ${!(ps&&ps['есть_порог'])?'disabled':''}>
+              <option value="считать только с суммы сверх порога" ${!(ps&&ps['логика_порога'])||ps['логика_порога']==='считать только с суммы сверх порога'?'selected':''}>считать только с суммы сверх порога</option>
+              <option value="считать со всей базы" ${ps&&ps['логика_порога']==='считать со всей базы'?'selected':''}>считать со всей базы</option>
+            </select></div>
+        </div>
+        <div style="font-size:11px;margin-top:4px;${ps&&ps['тип_ставки']?'color:#6d28d9':'color:#aaa'}">
+          ${ps&&ps['тип_ставки']?`${ps['тип_ставки']} · ${ps['процент']||'?'}%${ps['есть_порог']?` · порог: ${fmt(parseFloat(ps['минимум_поступлений']||0))} EUR`:''}`:' провизион не настроен'}</div>
+      </div>
+      <div class="cact">
+        <button class="btn btn-d btn-sm" onclick="delMgr(${idx})">Удалить</button>
+        <button class="btn btn-p btn-sm" onclick="saveMgrCard(${idx})">Сохранить</button>
+      </div>
+    </div>`;
+  });
+  cont.innerHTML=h+'</div>';
+}
+
+function onModeChange(idx) {
+  const isM=document.getElementById(`fm${idx}`).value==='вручную';
+  const tog=(id,dis)=>{const el=document.getElementById(id);if(!el)return;el.style.opacity=dis?'0.4':'1';el.style.pointerEvents=dis?'none':'';el.querySelectorAll('input,select').forEach(x=>x.disabled=dis);};
+  tog(`fg${idx}`,isM);tog(`fe${idx}`,isM);tog(`fman${idx}`,!isM);
+}
+function toggleAct(idx){APP.managers[idx]['активен']=APP.managers[idx]['активен']===false;saveMgr(APP.managers);renderMgr();if(APP.raw)rerun();}
+function togglePH(idx){
+  const ch=document.getElementById(`ph${idx}`)?.checked;
+  const r1=document.getElementById(`phr${idx}`),r2=document.getElementById(`plr${idx}`);
+  if(r1){r1.style.opacity=ch?'1':'0.4';r1.style.pointerEvents=ch?'':'none';r1.querySelectorAll('input,select').forEach(x=>x.disabled=!ch);}
+  if(r2){r2.style.opacity=ch?'1':'0.4';r2.style.pointerEvents=ch?'':'none';r2.querySelectorAll('input,select').forEach(x=>x.disabled=!ch);}
+}
+function addBonus(idx){if(!APP.managers[idx]['бонусы'])APP.managers[idx]['бонусы']=[];APP.managers[idx]['бонусы'].push({планка:'',бонус:''});renderMgr();}
+function delBonus(idx,si){APP.managers[idx]['бонусы'].splice(si,1);saveMgr(APP.managers);renderMgr();if(APP.raw)rerun();}
+function saveMgrCard(idx){
+  const g=id=>document.getElementById(id);
+  const name=g(`fn${idx}`)?.value?.trim();
+  if(!name){alert('Имя не может быть пустым');return;}
+  const mode=g(`fm${idx}`)?.value,isM=mode==='вручную';
+  if(isM&&isNaN(parseFloat(g(`fsal${idx}`)?.value))){alert('Укажите ручной оклад (число)');return;}
+  const bRows=document.querySelectorAll(`#bs${idx} .bstep`);
+  const bonuses=[];let bErr=false;
+  bRows.forEach(r=>{const pl=r.querySelector('.bp')?.value?.trim(),bn=r.querySelector('.bb')?.value?.trim();
+    if(!pl&&!bn)return;
+    if(!pl||isNaN(parseFloat(pl))){alert('Планка бонуса должна быть числом');bErr=true;return;}
+    if(!bn||isNaN(parseFloat(bn))){alert('Сумма бонуса должна быть числом');bErr=true;return;}
+    bonuses.push({планка:parseFloat(pl),бонус:parseFloat(bn)});});
+  if(bErr)return;
+  // Provizion settings
+  const pType=g(`pt${idx}`)?.value||'';
+  let ps=null;
+  if(pType){
+    const pPct=g(`pp${idx}`)?.value?.trim();
+    if(!pPct||isNaN(parseFloat(pPct))){alert('Укажите процент провизиона');return;}
+    const pHas=g(`ph${idx}`)?.checked||false;
+    const pMin=g(`pmin${idx}`)?.value?.trim();
+    if(pHas&&(!pMin||isNaN(parseFloat(pMin)))){alert('Укажите минимум поступлений для порога');return;}
+    ps={тип_ставки:pType,процент:parseFloat(pPct),есть_порог:pHas,
+      минимум_поступлений:pHas?parseFloat(pMin):null,
+      логика_порога:pHas?(g(`pl${idx}`)?.value||'считать только с суммы сверх порога'):null};
+  }
+  const thrRaw=g(`fthr${idx}`)?.value?.trim();
+  APP.managers[idx]={manager_name:name,активен:APP.managers[idx]['активен']!==false,
+    режим_фикса:mode,группа_фикса:g(`fgr${idx}`)?.value||'',тип_занятости:g(`fet${idx}`)?.value||'',
+    ручной_фиксированный_оклад:isM?parseFloat(g(`fsal${idx}`)?.value):null,
+    минимальный_порог:isM?(!thrRaw||thrRaw===''?null:parseFloat(thrRaw)):null,
+    бонусы:bonuses,настройки_провизиона:ps};
+  saveMgr(APP.managers);renderMgr();if(APP.raw)rerun();
+}
+function addMgr(){APP.managers.push({manager_name:'',активен:true,режим_фикса:'по группе',группа_фикса:'удалённый менеджер',тип_занятости:'полная занятость',бонусы:[],настройки_провизиона:null});renderMgr();}
+function delMgr(idx){if(!confirm(`Удалить "${APP.managers[idx].manager_name}"?`))return;APP.managers.splice(idx,1);saveMgr(APP.managers);renderMgr();if(APP.raw)rerun();}
+function rerun(){APP.payroll=runPayroll();renderAll();}
+
+// ═══════════════════════════════════════════════════════════
+// JTL PIPELINE
+// ═══════════════════════════════════════════════════════════
+const DS={AUTO:'авто',QUAR:'карантин',MANUAL:'ручная_проверка',OK:'вручную_ок',EXCL:'исключена',DUP:'дубль',JOINT:'совместная',COUNTED:'учтена'};
+
+function classifyJTL(row, excl, ddDedup) {
+  const plat=(row['Plattformen']||'').trim();
+  const mwst=parseFloat((row['MwSt']||'').replace('%','').replace(',','.'));
+  const rech=(row['Rechnungsnummer']||'').trim();
+  const lief=(row['Lieferschein']||'').trim();
+  const vers=(row['Versanddatum']||'').trim();
+  const bstNr=(row['Bestellnummer']||'').trim();
+  const rechNr=(row['Rechnungsnummer']||'').trim();
+  const verk=(row['Verkaeufer']||'').trim();
+  const dk=`${bstNr}|${rechNr}|${verk}`;
+  if(ddDedup.has(dk))return{status:DS.DUP,reason:'Уже учтена в провизионе',dk};
+  if(excl.includes(plat))return{status:DS.EXCL,reason:`Платформа исключена: ${plat}`,dk};
+  if(isNaN(mwst)||mwst===0)return{status:DS.MANUAL,reason:'MwSt = 0 → ручная проверка',dk};
+  if(rech&&(lief||vers))return{status:DS.AUTO,reason:'Rechnung + Lieferschein/Versanddatum',dk};
+  const miss=[];if(!rech)miss.push('Rechnungsnummer');if(!lief&&!vers)miss.push('Lieferschein/Versanddatum');
+  return{status:DS.QUAR,reason:`Карантин: нет ${miss.join(', ')}`,dk};
+}
+
+function parseCSV(text) {
+  const lines=text.split('\n');if(!lines.length)return{header:[],rows:[]};
+  const d=lines[0].split(';').length>=lines[0].split(',').length?';':',';
+  const splitLine=line=>{const r=[];let cur='',inQ=false;
+    for(const ch of line){if(ch==='"'){inQ=!inQ;}else if(ch===d&&!inQ){r.push(cur.replace(/^"|"$/g,'').trim());cur='';}else cur+=ch;}
+    r.push(cur.replace(/^"|"$/g,'').trim());return r;};
+  const header=splitLine(lines[0]);
+  const rows=[];
+  for(let i=1;i<lines.length;i++){
+    const l=lines[i].trim();if(!l)continue;
+    const vals=splitLine(l);const obj={};
+    header.forEach((h,j)=>obj[h]=vals[j]||'');
+    if(obj['Bestellnummer'])rows.push(obj);
+  }
+  return{header,rows};
+}
+
+function loadJTLFromInput(input) {
+  if(!input.files[0])return;
+  const reader=new FileReader();
+  reader.onload=e=>{
+    const{rows}=parseCSV(e.target.result);
+    const excl=APP.provSettings.excludedPlatforms||[];
+    const seen=new Set();
+    APP.deals=rows.map((row,i)=>{
+      const cl=classifyJTL(row,excl,APP.ddDedup);
+      const isDupInFile=seen.has(cl.dk);if(!isDupInFile)seen.add(cl.dk);
+      const status=isDupInFile?DS.DUP:cl.status;
+      return{id:`jtl_${i}`,bestellnummer:row['Bestellnummer'],rechnungsnummer:row['Rechnungsnummer'],
+        bestelldatum:row['Bestelldatum'],firma:row['Firma'],verkaeufer:row['Verkaeufer'],
+        lieferland:row['Lieferland'],plattform:row['Plattformen'],zahlungsart:row['Zahlungsart'],
+        lieferschein:row['Lieferschein'],versanddatum:row['Versanddatum'],
+        mwst:parseFloat((row['MwSt']||'').replace('%','').replace(',','.'))||0,
+        gesamtbetrag:parseFloat((row['Gesamtbetrag_Brutto']||'0').replace(',','.'))||0,
+        status,reason:isDupInFile?'Дубль в файле':cl.reason,dk:cl.dk,joint:null};
+    });
+    saveDeals(APP.deals);renderDeals();if(APP.raw)rerun();
+  };
+  reader.readAsText(input.files[0],'UTF-8');
+}
+
+function statusBadge(s){
+  const m={[DS.AUTO]:{c:'pg',l:'авто-закрыта'},[DS.QUAR]:{c:'py',l:'карантин'},[DS.MANUAL]:{c:'pp',l:'ручная проверка'},
+    [DS.OK]:{c:'pg',l:'подтверждена'},[DS.EXCL]:{c:'pgr',l:'исключена'},[DS.DUP]:{c:'pr',l:'дубль'},
+    [DS.JOINT]:{c:'pb',l:'совместная'},[DS.COUNTED]:{c:'tg',l:'учтена'}};
+  const d=m[s]||{c:'pgr',l:s};return`<span class="pill ${d.c}">${d.l}</span>`;
+}
+
+function renderDeals() {
+  const cont=document.getElementById('prov-deals');if(!cont)return;
+  const deals=APP.deals||[];
+  const excl=APP.provSettings.excludedPlatforms||[];
+  const fmap={all:null,avto:DS.AUTO,kv:DS.QUAR,manual:DS.MANUAL,excl:DS.EXCL,dup:DS.DUP,joint:DS.JOINT};
+  const fst=fmap[APP.provFilter];
+  const filt=fst?deals.filter(d=>d.status===fst):deals;
+  const cnt=s=>deals.filter(d=>d.status===s).length;
+  const totAmt=deals.filter(d=>d.status===DS.AUTO||d.status===DS.OK||d.status===DS.JOINT).reduce((s,d)=>s+(d.gesamtbetrag||0),0);
+  let h='';
+  if(deals.length){
+    h+=`<div class="cards" style="margin-bottom:14px">
+      <div class="card g"><div class="clbl">Авто-закрытых</div><div class="cval">${cnt(DS.AUTO)}</div></div>
+      <div class="card y"><div class="clbl">Карантин</div><div class="cval">${cnt(DS.QUAR)}</div></div>
+      <div class="card v"><div class="clbl">Ручная проверка</div><div class="cval">${cnt(DS.MANUAL)}</div></div>
+      <div class="card"><div class="clbl">Исключены</div><div class="cval" style="color:#aaa">${cnt(DS.EXCL)}</div></div>
+      <div class="card r"><div class="clbl">Дублей</div><div class="cval">${cnt(DS.DUP)}</div></div>
+      <div class="card b"><div class="clbl">Совместных</div><div class="cval">${cnt(DS.JOINT)}</div></div>
+      <div class="card g"><div class="clbl">Сумма (закрытые)</div><div class="cval csm">${fmt(totAmt)}</div><div class="csub">EUR брутто</div></div>
+    </div>
+    <div style="display:flex;gap:8px;align-items:center;margin-bottom:14px;flex-wrap:wrap">
+      <span style="font-size:12px;color:#666">Загружено: ${deals.length} сделок</span>
+      <label class="btn btn-s btn-sm" style="cursor:pointer">Загрузить CSV <input type="file" accept=".csv,.txt" style="display:none" onchange="loadJTLFromInput(this)"></label>
+      <button class="btn btn-d btn-sm" onclick="clearDeals()">Очистить</button>
+      <button class="btn btn-ok btn-sm" onclick="countDeals()">✓ Зарегистрировать закрытые</button>
+    </div>`;
+  }
+  h+=`<div class="stabs" style="margin-bottom:14px">
+    ${[['all',`Все (${deals.length})`],['avto',`Авто-закрытые (${cnt(DS.AUTO)})`],['kv',`Карантин (${cnt(DS.QUAR)})`],['manual',`Ручная проверка (${cnt(DS.MANUAL)})`],['excl',`Исключены (${cnt(DS.EXCL)})`],['dup',`Дубли (${cnt(DS.DUP)})`],['joint',`Совместные (${cnt(DS.JOINT)})`]].map(([k,l])=>`<button class="stab ${APP.provFilter===k?'active':''}" onclick="setProvFilt('${k}')">${l}</button>`).join('')}
+  </div>`;
+  if(!deals.length){
+    h+=`<div class="ua" style="padding:24px;margin-bottom:14px" onclick="document.getElementById('jtl-inp').click()">
+      <div style="font-size:22px;margin-bottom:6px">📋</div><p>Загрузите JTL-выгрузку (CSV)</p>
+      <p class="hint">Экспорт заказов из JTL-Wawi</p>
+      <input type="file" id="jtl-inp" accept=".csv,.txt" style="display:none" onchange="loadJTLFromInput(this)">
+      <span class="bup" onclick="event.stopPropagation();document.getElementById('jtl-inp').click()">Выбрать CSV</span>
+    </div>`;
+  } else if(!filt.length){
+    h+=`<div style="color:#aaa;font-size:13px;padding:16px 0">Нет сделок в этом фильтре.</div>`;
+  } else {
+    h+=`<div class="tw"><table><thead><tr>
+      <th>Bestell-Nr</th><th>Datum</th><th>Verkaeufer</th><th>Firma</th>
+      <th>Plattform</th><th>Land</th><th>MwSt</th>
+      <th style="text-align:right">Betrag</th><th>Rechnung</th><th>Lieferschein</th>
+      <th>Status</th><th>Aktionen</th>
+    </tr></thead><tbody>
+    ${filt.map(d=>{const oi=deals.indexOf(d);return`<tr>
+      <td class="mono" style="font-size:10px">${d.bestellnummer}</td>
+      <td style="font-size:11px">${d.bestelldatum}</td>
+      <td>${d.verkaeufer}</td>
+      <td style="max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${d.firma}">${d.firma}</td>
+      <td style="font-size:11px">${d.plattform}</td><td>${d.lieferland}</td>
+      <td style="text-align:center">${d.mwst>0?d.mwst+'%':'<span class="tm">0%</span>'}</td>
+      <td style="text-align:right" class="mono">${fmt(d.gesamtbetrag)}</td>
+      <td style="font-size:10px" class="mono">${d.rechnungsnummer||'<span class="tm">—</span>'}</td>
+      <td style="font-size:10px" class="mono">${d.lieferschein||(d.versanddatum?d.versanddatum:'<span class="tm">—</span>')}</td>
+      <td>${statusBadge(d.status)}<br><span style="font-size:9px;color:#aaa">${d.reason}</span></td>
+      <td>${d.status===DS.AUTO||d.status===DS.OK?`<button class="btn btn-s btn-sm" onclick="openJoint(${oi})">👥</button>`:''}
+          ${d.status===DS.MANUAL?`<button class="btn btn-p btn-sm" onclick="mOK(${oi})">✓</button>`:''}
+          ${d.status===DS.JOINT?`<button class="btn btn-s btn-sm" onclick="openJoint(${oi})">✏️</button>`:''}</td>
+    </tr>`;}).join('')}
+    </tbody></table></div>
+    <p style="font-size:11px;color:#aaa;margin-top:6px">Показано ${filt.length} из ${deals.length}</p>`;
+  }
+  cont.innerHTML=h;
+}
+function setProvFilt(f){APP.provFilter=f;renderDeals();}
+function clearDeals(){if(!confirm('Очистить реестр сделок?'))return;APP.deals=[];saveDeals(APP.deals);renderDeals();if(APP.raw)rerun();}
+function mOK(idx){APP.deals[idx].status=DS.OK;APP.deals[idx].reason='Подтверждена вручную';saveDeals(APP.deals);renderDeals();if(APP.raw)rerun();}
+function countDeals(){
+  const cl=APP.deals.filter(d=>d.status===DS.AUTO||d.status===DS.OK||d.status===DS.JOINT);
+  if(!cl.length){alert('Нет закрытых сделок.');return;}
+  cl.forEach(d=>{APP.ddDedup.add(d.dk);d.status=DS.COUNTED;d.reason='Учтена в провизионе';});
+  saveDDDedup(APP.ddDedup);saveDeals(APP.deals);alert(`Зарегистрировано ${cl.length} сделок.`);renderDeals();if(APP.raw)rerun();
+}
+function openJoint(idx){
+  const deal=APP.deals[idx];
+  const existing=deal.joint||[{manager:deal.verkaeufer,pct:100}];
+  const rid=`jr-${idx}`;
+  const existing_row=document.getElementById(rid);
+  if(existing_row){existing_row.remove();return;}
+  const tbl=document.querySelector('#prov-deals .tw table tbody');if(!tbl)return;
+  const newRow=document.createElement('tr');newRow.id=rid;
+  newRow.innerHTML=`<td colspan="12" style="background:#f0f4ff;padding:12px 16px">
+    <div style="background:#fff;border:1.5px solid #bfdbfe;border-radius:10px;padding:14px">
+      <div class="sh" style="margin-bottom:10px">👥 Совместная: ${deal.bestellnummer} · ${fmt(deal.gesamtbetrag)} EUR</div>
+      <div style="display:grid;grid-template-columns:1fr 80px auto;gap:6px;margin-bottom:4px;font-size:10px;color:#aaa"><span>Менеджер</span><span>%</span><span></span></div>
+      <div id="jsh-${idx}">${existing.map((s,si)=>`<div class="bstep"><input type="text" class="jm" value="${s.manager||''}"><input type="number" class="jp" value="${s.pct||''}" min="0" max="100"><button class="bdel" onclick="this.parentElement.remove()">✕</button></div>`).join('')}</div>
+      <button class="badd" onclick="addJS('${idx}')">+ Участник</button>
+      <div id="jerr-${idx}" style="color:#c0392b;font-size:11px;margin-top:6px"></div>
+      <div style="display:flex;gap:8px;margin-top:10px">
+        <button class="btn btn-p btn-sm" onclick="saveJoint(${idx})">Сохранить</button>
+        <button class="btn btn-s btn-sm" onclick="document.getElementById('${rid}').remove()">Отмена</button>
+      </div>
+    </div></td>`;
+  const rows=tbl.querySelectorAll('tr');let target=null;
+  rows.forEach(r=>{if(r.cells[0]?.textContent?.trim()===deal.bestellnummer)target=r;});
+  if(target)target.insertAdjacentElement('afterend',newRow);else tbl.appendChild(newRow);
+}
+function addJS(idx){const c=document.getElementById(`jsh-${idx}`);if(!c)return;const d=document.createElement('div');d.className='bstep';d.innerHTML=`<input type="text" class="jm" placeholder="Менеджер"><input type="number" class="jp" placeholder="%" min="0" max="100"><button class="bdel" onclick="this.parentElement.remove()">✕</button>`;c.appendChild(d);}
+function saveJoint(idx){
+  const c=document.getElementById(`jsh-${idx}`);if(!c)return;
+  const shares=[];c.querySelectorAll('.bstep').forEach(r=>{const m=r.querySelector('.jm')?.value?.trim(),p=parseFloat(r.querySelector('.jp')?.value);if(m&&!isNaN(p))shares.push({manager:m,pct:p});});
+  const total=shares.reduce((s,j)=>s+j.pct,0);
+  if(Math.abs(total-100)>0.01){const e=document.getElementById(`jerr-${idx}`);if(e)e.textContent=`Сумма долей = ${total.toFixed(1)}%, должно быть 100%`;return;}
+  APP.deals[idx].joint=shares;APP.deals[idx].status=DS.JOINT;APP.deals[idx].reason=shares.map(s=>`${s.manager}: ${s.pct}%`).join(', ');
+  saveDeals(APP.deals);document.getElementById(`jr-${idx}`)?.remove();renderDeals();if(APP.raw)rerun();
+}
+
+// ═══════════════════════════════════════════════════════════
+// RENDER: PLATFORM SETTINGS
+// ═══════════════════════════════════════════════════════════
+function renderProvPlat() {
+  const cont=document.getElementById('prov-plat');if(!cont)return;
+  const s=APP.provSettings;
+  const all=[...new Set([...DEFAULT_PROV.excludedPlatforms,...(APP.deals||[]).map(d=>d.plattform).filter(Boolean),...(s.allPlatforms||[])])].sort();
+  cont.innerHTML=`<div class="sh">Настройки провизиона — исключаемые платформы</div>
+    <p style="font-size:12px;color:#888;margin-bottom:14px">Отмеченные платформы не участвуют в провизионе.</p>
+    <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px">
+      ${all.map(p=>{const ch=s.excludedPlatforms.includes(p);return`<label style="display:flex;align-items:center;gap:10px;font-size:13px;cursor:pointer">
+        <input type="checkbox" ${ch?'checked':''} onchange="togglePlat('${p}',this.checked)" style="width:16px;height:16px">
+        <span>${p}</span> <span class="pill ${ch?'pr':'pg'}">${ch?'исключена':'участвует'}</span>
+      </label>`;}).join('')}
+    </div>
+    <div style="display:flex;gap:8px;align-items:center">
+      <input type="text" id="newPlat" placeholder="Добавить платформу..." style="border:1px solid #d0d4e0;border-radius:6px;padding:6px 10px;font-size:12px;width:220px">
+      <button class="btn btn-s btn-sm" onclick="addPlat()">+ Добавить</button>
+    </div>`;
+}
+function togglePlat(p,ex){const s=APP.provSettings;if(ex){if(!s.excludedPlatforms.includes(p))s.excludedPlatforms.push(p);}else{s.excludedPlatforms=s.excludedPlatforms.filter(x=>x!==p);}saveProv(s);renderProvPlat();}
+function addPlat(){const v=document.getElementById('newPlat')?.value?.trim();if(!v)return;const s=APP.provSettings;if(!s.allPlatforms)s.allPlatforms=[];if(!s.allPlatforms.includes(v))s.allPlatforms.push(v);saveProv(s);document.getElementById('newPlat').value='';renderProvPlat();}
+
+// ═══════════════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════════════
+window.addEventListener('load', function() {
+  APP.managers    = loadMgr();
+  APP.dedup       = loadDedup();
+  APP.hist        = loadHist();
+  APP.deals       = loadDeals();
+  APP.ddDedup     = loadDDDedup();
+  APP.provSettings= loadProv();
+  renderMgr();
+  renderHist();
+  renderDeals();
+  renderProvPlat();
+});
+</script>
+</body>
+</html>
