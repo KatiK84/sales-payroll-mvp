@@ -3,870 +3,94 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>Sales Payroll MVP v0.4</title>
-<style>
-*{box-sizing:border-box;margin:0;padding:0}
-body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f0f2f5;color:#1a1a2e;font-size:14px;min-height:100vh}
-.app{max-width:1240px;margin:0 auto;padding:22px 16px}
-header h1{font-size:21px;font-weight:700}
-header p{font-size:12px;color:#666;margin-top:3px;margin-bottom:20px}
-/* upload */
-.ua{background:#fff;border:2px dashed #c0cae0;border-radius:12px;padding:36px 24px;text-align:center;cursor:pointer;transition:border-color .2s;margin-bottom:18px}
-.ua:hover,.ua.drag{border-color:#4f7fff}
-.ua .ico{font-size:30px;margin-bottom:8px}
-.ua p{font-size:13px;color:#555;margin-bottom:4px}
-.ua .hint{font-size:11px;color:#aaa;margin-bottom:14px}
-.bup{display:inline-block;background:#4f7fff;color:#fff;padding:8px 20px;border-radius:8px;cursor:pointer;font-size:13px;font-weight:500}
-/* panel */
-.panel{background:#fff;border-radius:12px;padding:22px;box-shadow:0 1px 6px rgba(0,0,0,.07);margin-bottom:16px}
-.tabs{display:flex;gap:0;border-bottom:2px solid #eee;margin-bottom:20px;flex-wrap:wrap}
-.tab{padding:9px 16px;border:none;background:none;cursor:pointer;font-size:13px;color:#888;border-bottom:2px solid transparent;margin-bottom:-2px;white-space:nowrap;font-weight:500;transition:color .15s}
-.tab:hover{color:#4f7fff}.tab.active{color:#4f7fff;border-bottom-color:#4f7fff}
-.pane{display:none}.pane.active{display:block}
-/* cards */
-.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(148px,1fr));gap:11px;margin-bottom:16px}
-.card{background:#f7f9ff;border-radius:10px;padding:13px 15px;border:1px solid #e8ecf8}
-.card.g{border-color:#a8e6b8;background:#f0fff4}.card.r{border-color:#ffb8b8;background:#fff4f4}
-.clbl{font-size:10px;color:#999;text-transform:uppercase;letter-spacing:.05em;margin-bottom:5px}
-.cval{font-size:20px;font-weight:700}.card.g .cval{color:#1a7a3a}.card.r .cval{color:#c0392b}
-.csub{font-size:10px;color:#aaa;margin-top:2px}
-/* info boxes */
-.ib{background:#fffbe6;border:1px solid #ffe066;border-radius:8px;padding:11px 14px;margin-bottom:10px;font-size:12px;color:#7a6000}
-.ib ul{padding-left:16px;margin-top:4px}.ib li{margin-bottom:2px}
-.eb{background:#fff4f4;border:1px solid #ffb0b0;border-radius:8px;padding:11px 14px;margin-bottom:10px;font-size:12px;color:#c0392b}
-.eb h4{margin-bottom:7px;font-size:13px;font-weight:600}
-.mbx{background:#f7f9ff;border-radius:8px;padding:12px 14px;font-size:12px;border:1px solid #e8ecf8;margin-bottom:10px}
-.mbx h3{font-size:12px;font-weight:600;margin-bottom:7px}
-.mrow{display:flex;gap:10px;margin-bottom:4px}
-.mk{color:#888;min-width:130px;flex-shrink:0}.mv{font-weight:500}
-/* table */
-.tw{overflow-x:auto;border-radius:8px;border:1px solid #eee}
-table{width:100%;border-collapse:collapse;font-size:12px}
-thead th{background:#f7f9ff;padding:8px 10px;text-align:left;font-weight:600;color:#555;border-bottom:2px solid #eee;white-space:nowrap}
-tbody td{padding:7px 10px;border-bottom:1px solid #f5f5f5;vertical-align:middle}
-tbody tr:last-child td{border-bottom:none}
-tbody tr:hover td{background:#f9fbff}
-/* pills */
-.pill{display:inline-block;padding:2px 7px;border-radius:4px;font-size:11px;font-weight:500;white-space:nowrap}
-.py{background:#fff3cd;color:#856404}.pg{background:#d1f7e0;color:#1a7a3a}
-.pgr{background:#f0f0f0;color:#666}.pb{background:#dbeafe;color:#1e40af}
-.pp{background:#ede9fe;color:#6d28d9}.pr{background:#fee2e2;color:#b91c1c}
-/* fix summary */
-.fs{background:linear-gradient(135deg,#f0fff4,#e8f4fd);border:1px solid #a8d8b8;border-radius:10px;padding:14px 18px;margin-bottom:14px;display:flex;align-items:center;gap:20px;flex-wrap:wrap}
-.fsv{font-size:24px;font-weight:700;color:#1a7a3a}
-.fsl{font-size:11px;color:#4a9a6a;margin-bottom:2px}
-.fsi{font-size:12px;color:#666}
-/* spin */
-.spin{width:26px;height:26px;border:3px solid #eee;border-top-color:#4f7fff;border-radius:50%;animation:spin .7s linear infinite;margin:0 auto 8px}
-@keyframes spin{to{transform:rotate(360deg)}}
-.loading{text-align:center;padding:28px;color:#888;font-size:12px}
-.sh{font-size:13px;font-weight:600;color:#333;margin-bottom:13px;padding-bottom:8px;border-bottom:1px solid #eee}
-.mono{font-family:monospace;font-size:11px}
-.tg{color:#1a7a3a;font-weight:600}.tm{color:#aaa}.text-blue{color:#1e40af;font-weight:600}
-
-
-/* active toggle */
-.toggle-row{display:flex;align-items:center;gap:10px;margin-bottom:10px;padding:8px 12px;border-radius:8px;background:#f7f9ff;border:1px solid #e8ecf8}
-.toggle-row.active-on{background:#f0fff4;border-color:#a8e6b8}
-.toggle-row.active-off{background:#fff4f4;border-color:#ffb8b8}
-.toggle-lbl{font-size:12px;font-weight:600;flex:1}
-.toggle-lbl.on{color:#1a7a3a}.toggle-lbl.off{color:#c0392b}
-.toggle-btn{position:relative;width:44px;height:24px;border-radius:12px;border:none;cursor:pointer;transition:background .2s;flex-shrink:0}
-.toggle-btn.on{background:#34c759}.toggle-btn.off{background:#ccc}
-.toggle-btn::after{content:'';position:absolute;width:18px;height:18px;border-radius:50%;background:#fff;top:3px;transition:left .2s}
-.toggle-btn.on::after{left:23px}.toggle-btn.off::after{left:3px}
-.inactive-overlay{opacity:0.5;pointer-events:none}
-
-/* ── MANAGER EDITOR ──────────────────────────────────────── */
-.dir-toolbar{display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap}
-.dir-toolbar h2{font-size:14px;font-weight:600;flex:1}
-.btn{padding:7px 14px;border-radius:7px;cursor:pointer;font-size:12px;font-weight:500;border:1.5px solid}
-.btn-primary{background:#4f7fff;color:#fff;border-color:#4f7fff}
-.btn-primary:hover{background:#3a6aee;border-color:#3a6aee}
-.btn-secondary{background:#fff;color:#444;border-color:#d0d4e0}
-.btn-secondary:hover{background:#f5f6fa}
-.btn-danger{background:#fff;color:#c0392b;border-color:#ffb0b0}
-.btn-danger:hover{background:#fff4f4}
-.btn-sm{padding:4px 10px;font-size:11px;border-radius:5px}
-
-.mgr-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:12px}
-.mgr-card-edit{background:#f9fafb;border:1.5px solid #e0e4ec;border-radius:10px;padding:14px 16px;position:relative;transition:border-color .15s}
-.mgr-card-edit:hover{border-color:#b0bce0}
-.mgr-card-edit.unsaved{border-color:#ffa040;background:#fffaf5}
-
-.frow{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px}
-.frow.full{grid-template-columns:1fr}
-.fld label{display:block;font-size:10px;color:#888;font-weight:600;text-transform:uppercase;letter-spacing:.04em;margin-bottom:3px}
-.fld input,.fld select{width:100%;border:1px solid #d0d4e0;border-radius:6px;padding:6px 9px;font-size:12px;background:#fff;color:#1a1a2e;outline:none;transition:border-color .15s}
-.fld input:focus,.fld select:focus{border-color:#4f7fff}
-.fld input:disabled,.fld select:disabled{background:#f5f5f5;color:#bbb;cursor:not-allowed}
-.fld input.err{border-color:#e74c3c;background:#fff8f8}
-
-.card-top{display:flex;align-items:center;gap:10px;margin-bottom:12px}
-.card-top .avatar{width:34px;height:34px;border-radius:50%;background:#dbeafe;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#1e40af;flex-shrink:0}
-.card-top h3{font-size:13px;font-weight:600;flex:1}
-.card-actions{display:flex;gap:6px;margin-top:10px;justify-content:flex-end;border-top:1px solid #eee;padding-top:10px}
-
-
-/* bonus steps */
-.bonus-section{margin-top:10px;padding-top:10px;border-top:1px dashed #ddd}
-.bonus-section-hdr{display:flex;align-items:center;gap:8px;margin-bottom:8px}
-.bonus-section-hdr span{font-size:10px;font-weight:700;color:#1e40af;text-transform:uppercase;letter-spacing:.04em;flex:1}
-.bonus-step{display:grid;grid-template-columns:1fr 1fr auto;gap:6px;margin-bottom:6px;align-items:center}
-.bonus-step input{border:1px solid #d0d4e0;border-radius:6px;padding:5px 8px;font-size:12px;background:#fff;color:#1a1a2e;outline:none;width:100%}
-.bonus-step input:focus{border-color:#1e40af}
-.bonus-del{background:none;border:none;cursor:pointer;color:#c0392b;font-size:14px;padding:2px 4px}
-.bonus-add{font-size:11px;color:#1e40af;background:none;border:1px solid #bfdbfe;border-radius:5px;padding:4px 10px;cursor:pointer}
-.bonus-add:hover{background:#eff6ff}
-.bonus-preview{font-size:10px;color:#1e40af;margin-top:4px;font-style:italic}
-
-.unsaved-badge{position:absolute;top:10px;right:10px;background:#ffa040;color:#fff;font-size:10px;font-weight:600;padding:2px 7px;border-radius:4px}
-.save-hint{font-size:11px;color:#ffa040;margin-top:4px;text-align:right}
-</style>
+<title>Sales Payroll MVP v0.7</title>
+<link rel="stylesheet" href="style.css">
 </head>
 <body>
 <div class="app">
   <header>
     <h1>💰 Sales Payroll MVP</h1>
-    <p>v0.4 · Фиксированная часть + редактор менеджеров · Frontend only · GitHub Pages</p>
+    <p>v0.7 · Фикс + Бонус + Провизион (pipeline) + Дедупликация + История · Frontend only</p>
   </header>
 
   <div class="ua" id="ua">
     <div class="ico">📂</div>
-    <p>Загрузите Excel-файл отчёта по поступлениям</p>
+    <p>Загрузите Excel-файл отчёта по поступлениям (для расчёта фикса)</p>
     <p class="hint">.xlsx — выгрузка из ERP/1С</p>
     <label><input type="file" id="fi" accept=".xlsx,.xls" hidden><span class="bup">Выбрать файл</span></label>
   </div>
 
-  <div class="panel" id="mp" style="display:none">
+  <div class="panel" id="mainPanel">
     <div class="tabs">
-      <button class="tab active" data-tab="ov">Обзор</button>
-      <button class="tab" data-tab="fp">🧮 Реестр фиксированной части</button>
-      <button class="tab" data-tab="dir">⚙️ Настройки менеджеров</button>
-      <button class="tab" data-tab="pv">Предпросмотр данных</button>
-      <button class="tab" data-tab="st">Структура файла</button>
+      <button class="tab active" data-tab="overview">Обзор</button>
+      <button class="tab" data-tab="fixed">🧮 Реестр выплат</button>
+      <button class="tab" data-tab="prov">📦 Провизион</button>
+      <button class="tab" data-tab="dedup">🔍 Дубли оплат</button>
+      <button class="tab" data-tab="history">📅 История</button>
+      <button class="tab" data-tab="dir">⚙️ Менеджеры</button>
+      <button class="tab" data-tab="preview">Предпросмотр</button>
+      <button class="tab" data-tab="structure">Структура</button>
     </div>
-    <div class="pane active" id="pane-ov"><div class="cards" id="cards"></div><div id="ib"></div><div id="mb2"></div></div>
-    <div class="pane" id="pane-fp"><div id="fpc"></div></div>
-    <div class="pane" id="pane-dir"><div id="dirc"></div></div>
-    <div class="pane" id="pane-pv"><div id="pvc"></div></div>
-    <div class="pane" id="pane-st"><div id="stc"></div></div>
-  </div>
 
-  <!-- standalone editor (before file load) -->
-  <div class="panel" id="dirPanel">
-    <div id="dirc2"></div>
+    <div class="pane active" id="pane-overview"><div id="overviewContent"></div></div>
+    <div class="pane" id="pane-fixed"><div id="fpc"></div></div>
+
+    <!-- Provizion tab with its own sub-tabs -->
+    <div class="pane" id="pane-prov">
+      <div class="tabs" style="margin-bottom:16px">
+        <button class="tab active" data-subtab="provDeals" onclick="switchProvTab('provDeals')">Реестр сделок</button>
+        <button class="tab" data-subtab="provSettings" onclick="switchProvTab('provSettings')">Настройки платформ</button>
+      </div>
+      <div id="provContent"></div>
+      <div id="provSettingsContent" style="display:none"></div>
+    </div>
+
+    <div class="pane" id="pane-dedup"><div id="dedupContent"></div></div>
+    <div class="pane" id="pane-history"><div id="historyContent"></div></div>
+    <div class="pane" id="pane-dir"><div id="dirc"></div></div>
+    <div class="pane" id="pane-preview"><div id="pvc"></div></div>
+    <div class="pane" id="pane-structure"><div id="stc"></div></div>
   </div>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="config.js"></script>
+<script src="storage.js"></script>
+<script src="payroll.js"></script>
+<script src="provizion.js"></script>
+<script src="app.js"></script>
 <script>
-// ══════════════════════════════════════════════════════════════════════
-// DEFAULT DIRECTORY
-// ══════════════════════════════════════════════════════════════════════
-const DEFAULT_DIR = [
-  {"manager_name":"David K.","активен":true,"режим_фикса":"по группе","группа_фикса":"удалённый менеджер","тип_занятости":"полная занятость","бонусы":[{"планка":35000,"бонус":200},{"планка":40000,"бонус":300}]},
-  {"manager_name":"Leonid S","активен":true,"режим_фикса":"по группе","группа_фикса":"удалённый менеджер","тип_занятости":"частичная занятость","бонусы":[]},
-  {"manager_name":"Volodymyr","активен":true,"режим_фикса":"по группе","группа_фикса":"фикс независимо от поступлений","тип_занятости":"полная занятость","бонусы":[]},
-  {"manager_name":"Volodymyr ","активен":true,"режим_фикса":"по группе","группа_фикса":"фикс независимо от поступлений","тип_занятости":"полная занятость","бонусы":[]},
-  {"manager_name":"B2B Allianz","активен":true,"режим_фикса":"по группе","группа_фикса":"без оклада","тип_занятости":"полная занятость","бонусы":[]}
-];
-
-// live working copy – all edits happen here
-let DIR = JSON.parse(JSON.stringify(DEFAULT_DIR));
-
-// ══════════════════════════════════════════════════════════════════════
-// COLUMN MAPPING
-// ══════════════════════════════════════════════════════════════════════
-const COL = {
-  date:0, counterpart:3, manager:4, article:7, name:8, qty:12,
-  received:14, goodsNoVat:15, serviceNoVat:16
-};
-
-// ══════════════════════════════════════════════════════════════════════
-// CALC ENGINE
-// ══════════════════════════════════════════════════════════════════════
-function calcFixed(e, base) {
-  const mode = e["режим_фикса"];
-  if (!mode) return {fixed:0, rule:"Не указан режим_фикса", isErr:true};
-
-  if (mode === "вручную") {
-    const sal = e["ручной_фиксированный_оклад"];
-    if (sal === undefined || sal === null || sal === "")
-      return {fixed:0, rule:"вручную: не указан ручной_фиксированный_оклад", isErr:true};
-    const sn = parseFloat(sal);
-    if (isNaN(sn)) return {fixed:0, rule:"вручную: оклад не число", isErr:true};
-    const thr = e["минимальный_порог"];
-    const hasThr = thr !== null && thr !== undefined && thr !== "" && thr !== "нет";
-    if (hasThr) {
-      const tn = parseFloat(thr);
-      if (isNaN(tn)) return {fixed:0, rule:"вручную: порог не число и не null", isErr:true};
-      return base >= tn
-        ? {fixed:sn, rule:`вручную: ${sn}, порог ${fmt(tn)} → выплачено`, isErr:false}
-        : {fixed:0,  rule:`вручную: ${sn}, порог ${fmt(tn)} → порог не достигнут (${fmt(base)} < ${fmt(tn)})`, isErr:false};
-    }
-    return {fixed:sn, rule:`вручную: ${sn}, порог нет → выплачено`, isErr:false};
-  }
-
-  if (mode === "по группе") {
-    const g = e["группа_фикса"], et = e["тип_занятости"];
-    if (!g) return {fixed:0, rule:"по группе: не указана группа_фикса", isErr:true};
-    if (!et && g !== "без оклада") return {fixed:0, rule:"по группе: не указан тип_занятости", isErr:true};
-    if (g === "без оклада") return {fixed:0, rule:"без оклада → 0", isErr:false};
-    if (g === "фикс независимо от поступлений") {
-      if (et === "полная занятость")    return {fixed:800, rule:"фикс всегда, полная занятость → 800", isErr:false};
-      if (et === "частичная занятость") return {fixed:400, rule:"фикс всегда, частичная занятость → 400", isErr:false};
-      return {fixed:0, rule:`неизвестный тип_занятости: "${et}"`, isErr:true};
-    }
-    if (g === "удалённый менеджер") {
-      if (et === "полная занятость")
-        return base >= 10000
-          ? {fixed:800, rule:`полная занятость ≥ 10 000 → 800 (база: ${fmt(base)})`, isErr:false}
-          : {fixed:400, rule:`полная занятость < 10 000 → 400 (база: ${fmt(base)})`, isErr:false};
-      if (et === "частичная занятость")
-        return base >= 5000
-          ? {fixed:400, rule:`частичная занятость ≥ 5 000 → 400 (база: ${fmt(base)})`, isErr:false}
-          : {fixed:200, rule:`частичная занятость < 5 000 → 200 (база: ${fmt(base)})`, isErr:false};
-      return {fixed:0, rule:`неизвестный тип_занятости: "${et}"`, isErr:true};
-    }
-    return {fixed:0, rule:`неизвестная группа_фикса: "${g}"`, isErr:true};
-  }
-  return {fixed:0, rule:`неизвестный режим_фикса: "${mode}"`, isErr:true};
-}
-
-// ══════════════════════════════════════════════════════════════════════
-// BONUS CALCULATION
-// ══════════════════════════════════════════════════════════════════════
-function calcBonus(e, base) {
-  const steps = e["бонусы"];
-  if (!steps || !Array.isArray(steps) || steps.length === 0) return {bonus:0, detail:'', errs:[]};
-  const errs=[], reached=[];
-  let total=0;
-  steps.forEach((step,i)=>{
-    const pl=parseFloat(step["планка"]), bn=parseFloat(step["бонус"]);
-    if(isNaN(pl)){errs.push(`ступень ${i+1}: планка не число`);return;}
-    if(isNaN(bn)){errs.push(`ступень ${i+1}: бонус не число`);return;}
-    if(base>=pl){total+=bn;reached.push(`${fmt(pl)} → +${fmt(bn)}`);}
-  });
-  return {bonus:total, detail:reached.length?reached.join('; '):'', errs};
-}
-
-// ══════════════════════════════════════════════════════════════════════
-// HELPERS
-// ══════════════════════════════════════════════════════════════════════
-function excelDateToStr(serial){const d=new Date(Math.round((serial-25569)*86400*1000));const dd=String(d.getUTCDate()).padStart(2,"0");const mm=String(d.getUTCMonth()+1).padStart(2,"0");return dd+"."+mm+"."+d.getUTCFullYear()+" "+String(d.getUTCHours()).padStart(2,"0")+":"+String(d.getUTCMinutes()).padStart(2,"0");}
-const s=v=>{if(v==null)return"";if(typeof v==="number"&&v>40000&&v<70000)return excelDateToStr(v);return String(v).trim();};
-const n  = v => { if (v==null||v==='') return 0; const x=parseFloat(String(v).replace(',','.')); return isNaN(x)?0:x; };
-const fmt= v => { if(!v&&v!==0)return'—'; if(v===0)return'0,00'; return v.toLocaleString('de-DE',{minimumFractionDigits:2,maximumFractionDigits:2}); };
-
-const mpill = m => m==='по группе'?`<span class="pill pb">${m}</span>`:m==='вручную'?`<span class="pill pp">${m}</span>`:`<span class="pill pgr">${m||'—'}</span>`;
-const gpill = g => g==='удалённый менеджер'?`<span class="pill py">${g}</span>`:g==='фикс независимо от поступлений'?`<span class="pill pg" style="font-size:10px">${g}</span>`:g==='без оклада'?`<span class="pill pgr">${g}</span>`:`<span class="pill pgr">${g==='—'?'вручную':g||'—'}</span>`;
-const epill = e => e==='полная занятость'?`<span class="pill pb">${e}</span>`:e==='частичная занятость'?`<span class="pill pgr">${e}</span>`:`<span class="pill pgr">${e||'—'}</span>`;
-
-// ══════════════════════════════════════════════════════════════════════
-// ROW CLASSIFIER
-// ══════════════════════════════════════════════════════════════════════
-function classify(row) {
-  const f = s(row[0]), nn = row.filter(v=>v!==null&&v!=='').length;
-  if (nn===0) return 'empty';
-  if (f.includes('Data parameters')||f.includes('Дата начала')||f.includes('Дата окончания')||f.includes('Filter:')) return 'service';
-  if (f==='Фонд'||f==='Документ'||f==='Дата') return 'header';
-  if (row.some(v=>s(v)==='Документ основание')) return 'header';
-  if (f==='Total'||f==='Итого') return 'total';
-  if (/^0\d\s+фонд\s+/i.test(f)) return 'group';
-  if (/Поступление на расчетный счет\s+\d+/i.test(f)) return 'doc_bank';
-  if (/ПКО\s+[A-Z]+\d+/i.test(f)) return 'doc_cash';
-  if (/^\d{2}\.\d{2}\.\d{4}/.test(f)) return 'data';
-  return 'unknown';
-}
-function extractMeta(raw) {
-  const m = {};
-  raw.slice(0,10).forEach(row => {
-    const r = row.map(s).join(' ');
-    const a = r.match(/Дата начала[:\s]+(\d{2}\.\d{2}\.\d{4})/);
-    const b = r.match(/Дата окончания[:\s]+(\d{2}\.\d{2}\.\d{4})/);
-    if (a) m.start=a[1]; if (b) m.end=b[1];
-    if (r.includes('фонд GH')) m.fund='01 фонд GH';
-  });
-  return m;
-}
-function buildRows(raw) {
-  const rows=[]; let fund='',doc='',docType='';
-  for (let i=0;i<raw.length;i++) {
-    const row=raw[i], t=classify(row);
-    if(t==='group')   {fund=s(row[0]);}
-    if(t==='doc_bank'){doc=s(row[0]);docType='bank';}
-    if(t==='doc_cash'){doc=s(row[0]);docType='cash';}
-    if(t==='data'){
-      const art=s(row[COL.article]), svc=n(row[COL.serviceNoVat]), gds=n(row[COL.goodsNoVat]);
-      rows.push({fund,document:doc,docType,date:s(row[COL.date]),counterpart:s(row[COL.counterpart]),
-        manager:s(row[COL.manager]),article:art,name:s(row[COL.name]),qty:n(row[COL.qty]),
-        received:n(row[COL.received]),goodsNoVat:gds,serviceNoVat:svc,
-        isService:art.includes('EUPL')||(svc>0&&gds===0)});
-    }
-  }
-  return rows;
-}
-function aggMgr(rows) {
-  const m={};
-  rows.forEach(r=>{
-    const k=r.manager||'(не указан)';
-    if(!m[k]) m[k]={name:k,rows:[],totalReceived:0,goodsSum:0,docs:new Set()};
-    m[k].rows.push(r); m[k].totalReceived+=r.received||0; m[k].goodsSum+=r.goodsNoVat||0;
-    if(r.document) m[k].docs.add(r.document);
-  });
-  return Object.values(m).sort((a,b)=>b.totalReceived-a.totalReceived);
-}
-function runCalc(agg) {
-  const res=[], errs=[];
-  const inReport = new Set(agg.map(m=>m.name.trim()));
-
-  agg.forEach(m=>{
-    const e = DIR.find(d=>d.manager_name.trim()===m.name.trim());
-    if (!e) { errs.push({manager:m.name, issue:'Не найден в справочнике менеджеров', base:m.goodsSum}); return; }
-    if (e['активен'] === false) return;
-    const r = calcFixed(e, m.goodsSum);
-    if (r.isErr) { errs.push({manager:m.name, issue:r.rule, base:m.goodsSum}); return; }
-    const b = calcBonus(e, m.goodsSum);
-    b.errs.forEach(be=>errs.push({manager:m.name, issue:'Бонус: '+be, base:m.goodsSum}));
-    const thr=e["минимальный_порог"];
-    const td=(thr===null||thr===undefined||thr===''||thr==='нет')?'нет':fmt(parseFloat(thr));
-    res.push({manager:m.name, mode:e["режим_фикса"]||'—', group:e["группа_фикса"]||'—',
-      empType:e["тип_занятости"]||'—', base:m.goodsSum, threshold:td,
-      fixedSalary:r.fixed, bonus:b.bonus, bonusDetail:b.detail,
-      provizion:0, total:r.fixed+b.bonus,
-      rule:r.rule, inReport:true});
-  });
-
-  DIR.forEach(e=>{
-    if (e['активен'] === false) return;
-    if (!e.manager_name || !e.manager_name.trim()) return;
-    if (inReport.has(e.manager_name.trim())) return;
-    const r = calcFixed(e, 0);
-    if (r.isErr) { errs.push({manager:e.manager_name, issue:r.rule+' (нет в отчёте)', base:0}); return; }
-    if (r.fixed === 0) return;
-    const thr=e["минимальный_порог"];
-    const td=(thr===null||thr===undefined||thr===''||thr==='нет')?'нет':fmt(parseFloat(thr));
-    res.push({manager:e.manager_name, mode:e["режим_фикса"]||'—', group:e["группа_фикса"]||'—',
-      empType:e["тип_занятости"]||'—', base:0, threshold:td,
-      fixedSalary:r.fixed, bonus:0, bonusDetail:'',
-      provizion:0, total:r.fixed,
-      rule:r.rule+' (нет продаж в периоде)', inReport:false});
-  });
-
-  return {res, errs};
-}
-
-
-// ══════════════════════════════════════════════════════════════════════
-// STATE
-// ══════════════════════════════════════════════════════════════════════
-let RAW=null, FNAME='', SHEET='', META={};
-
-// ══════════════════════════════════════════════════════════════════════
-// RENDER OVERVIEW
-// ══════════════════════════════════════════════════════════════════════
-function renderOverview(types, dr, res, errs) {
-  const dataCnt=types.filter(t=>t==='data').length;
-  const docCnt=types.filter(t=>t.startsWith('doc_')).length;
-  const mgrs=[...new Set(dr.map(r=>r.manager).filter(Boolean))];
-  const totAmt=dr.reduce((x,r)=>x+(r.received||0),0);
-  const totFix=res.reduce((x,r)=>x+r.fixedSalary,0);
-  const svcI=dr.filter(r=>r.isService);
-  document.getElementById('cards').innerHTML=`
-    <div class="card"><div class="clbl">Строк данных</div><div class="cval">${dataCnt}</div><div class="csub">позиций</div></div>
-    <div class="card"><div class="clbl">Документов</div><div class="cval">${docCnt}</div><div class="csub">поступлений</div></div>
-    <div class="card"><div class="clbl">Менеджеров</div><div class="cval">${mgrs.length}</div><div class="csub">${mgrs.slice(0,4).join(', ')}${mgrs.length>4?'…':''}</div></div>
-    <div class="card"><div class="clbl">Получено всего</div><div class="cval" style="font-size:15px">${fmt(totAmt)}</div><div class="csub">на счёт + касса</div></div>
-    <div class="card g"><div class="clbl">Фикс итого</div><div class="cval" style="font-size:15px">${fmt(totFix)} EUR</div><div class="csub">бонус: ${fmt(res.reduce((x,r)=>x+(r.bonus||0),0))} EUR</div></div><div class="card g" style="border-color:#1e40af;background:#eff6ff"><div class="clbl" style="color:#1e40af">Итого к выплате</div><div class="cval" style="font-size:15px;color:#1e40af">${fmt(res.reduce((x,r)=>x+(r.total||0),0))} EUR</div><div class="csub">${res.length} менеджер(а)</div></div>
-    ${errs.length?`<div class="card r"><div class="clbl">Ошибки</div><div class="cval">${errs.length}</div><div class="csub">нет в справочнике</div></div>`:''}`;
-
-  const ii=[`База фикса: "За товар без НДС" (col ${COL.goodsNoVat})`,`Менеджер: "Менеджер по продажам" (col ${COL.manager})`];
-  if(svcI.length) ii.push(`Услуги (EUPL): ${svcI.length} строк — исключены из базы`);
-  if(types.filter(t=>t==='service').length) ii.push('Служебный заголовок отчёта — исключён');
-  document.getElementById('ib').innerHTML=`<div class="ib"><strong>Параметры расчёта</strong><ul>${ii.map(i=>`<li>${i}</li>`).join('')}</ul></div>`;
-  document.getElementById('mb2').innerHTML=`<div class="mbx"><h3>Параметры отчёта</h3>
-    <div class="mrow"><span class="mk">Файл</span><span class="mv">${FNAME}</span></div>
-    <div class="mrow"><span class="mk">Лист</span><span class="mv">${SHEET}</span></div>
-    ${META.start?`<div class="mrow"><span class="mk">Период начала</span><span class="mv">${META.start}</span></div>`:''}
-    ${META.end?`<div class="mrow"><span class="mk">Период окончания</span><span class="mv">${META.end}</span></div>`:''}
-    ${META.fund?`<div class="mrow"><span class="mk">Фонд</span><span class="mv">${META.fund}</span></div>`:''}
-  </div>`;
-}
-
-// ══════════════════════════════════════════════════════════════════════
-// RENDER FIXED PART
-// ══════════════════════════════════════════════════════════════════════
-function renderFixed(res, errs) {
-  const totFix=res.reduce((x,r)=>x+r.fixedSalary,0);
-  const totBonus=res.reduce((x,r)=>x+(r.bonus||0),0);
-  const totTotal=res.reduce((x,r)=>x+(r.total||0),0);
-  const period=(META.start&&META.end)?`${META.start} — ${META.end}`:'—';
-  let fp=`<div class="sh">Реестр выплат по менеджерам</div>
-    <div class="fs" style="gap:28px">
-      <div><div class="fsl">Фикс итого</div><div class="fsv">${fmt(totFix)} EUR</div></div>
-      <div><div class="fsl">Бонус итого</div><div class="fsv" style="color:#1e40af">${fmt(totBonus)} EUR</div></div>
-      <div><div class="fsl">Провизион</div><div class="fsv" style="color:#aaa">0,00 EUR</div></div>
-      <div style="border-left:2px solid #a8d8b8;padding-left:20px"><div class="fsl" style="color:#333;font-weight:700">Итого к выплате</div><div class="fsv" style="font-size:28px">${fmt(totTotal)} EUR</div></div>
-      <div class="fsi">${res.length} менеджер(а) · Период: ${period}</div>
-    </div>`;
-  if (res.length) {
-    fp+=`<div class="tw" style="margin-bottom:14px"><table>
-      <thead><tr>
-        <th>Менеджер</th><th>Режим фикса</th><th>Группа фикса</th><th>Тип занятости</th>
-        <th style="text-align:right">База поступлений, EUR</th>
-        <th style="text-align:right">Мин. порог</th>
-        <th style="text-align:right">Фикс, EUR</th>
-        <th style="text-align:right">Бонус, EUR</th>
-        <th style="text-align:right">Провизион, EUR</th>
-        <th style="text-align:right">Итого к выплате, EUR</th>
-        <th>Правило / Бонус</th>
-      </tr></thead>
-      <tbody>
-        ${res.map(r=>`<tr>
-          <td><strong>${r.manager}</strong>${r.inReport===false?'<br><span style="font-size:10px;color:#888">нет продаж в периоде</span>':''}</td>
-          <td>${mpill(r.mode)}</td><td>${gpill(r.group)}</td><td>${epill(r.empType)}</td>
-          <td style="text-align:right" class="mono">${r.inReport===false?'<span style="color:#aaa">—</span>':fmt(r.base)}</td>
-          <td style="text-align:right" class="mono">${r.threshold}</td>
-          <td style="text-align:right" class="mono ${r.fixedSalary>0?'tg':'tm'}">${fmt(r.fixedSalary)}</td>
-          <td style="text-align:right" class="mono ${(r.bonus||0)>0?'text-blue':'tm'}">${fmt(r.bonus||0)}</td>
-          <td style="text-align:right" class="mono tm">0,00</td>
-          <td style="text-align:right" class="mono" style="font-weight:700;color:#1a1a2e">${fmt(r.total||0)}</td>
-          <td class="mono" style="color:#666;font-size:10px">${r.rule}${r.bonusDetail?'<br><span style="color:#1e40af">'+r.bonusDetail+'</span>':''}</td>
-        </tr>`).join('')}
-        <tr style="background:#f0fff4;font-weight:600">
-          <td colspan="6" style="text-align:right;padding-right:14px;color:#666;font-size:11px">Итого:</td>
-          <td style="text-align:right" class="mono tg">${fmt(totFix)}</td>
-          <td style="text-align:right" class="mono text-blue">${fmt(totBonus)}</td>
-          <td style="text-align:right" class="mono tm">0,00</td>
-          <td style="text-align:right" class="mono" style="font-weight:700">${fmt(totTotal)}</td>
-          <td></td>
-        </tr>
-      </tbody></table></div>`;
-  }
-  if (errs.length) {
-    fp+=`<div class="eb"><h4>⚠ Ошибки / Исключения (${errs.length})</h4>
-      <div class="tw"><table>
-        <thead><tr>
-          <th style="background:#fff4f4;color:#c0392b">Менеджер</th>
-          <th style="background:#fff4f4;color:#c0392b">Проблема</th>
-          <th style="background:#fff4f4;color:#c0392b;text-align:right">База поступлений</th>
-        </tr></thead>
-        <tbody>${errs.map(e=>`<tr>
-          <td>${e.manager}</td><td>${e.issue}</td>
-          <td style="text-align:right" class="mono">${fmt(e.base)}</td>
-        </tr>`).join('')}</tbody>
-      </table></div>
-      <p style="margin-top:8px;font-size:11px">Добавьте менеджеров в справочник (вкладка "Настройки менеджеров") и нажмите Пересчитать.</p>
-    </div>`;
-  }
-  document.getElementById('fpc').innerHTML = fp;
-}
-
-
-// ══════════════════════════════════════════════════════════════════════
-// RENDER PREVIEW
-// ══════════════════════════════════════════════════════════════════════
-function renderPreview(dr) {
-  const prev=dr.slice(0,30);
-  document.getElementById('pvc').innerHTML=`
-    <p style="font-size:11px;color:#999;margin-bottom:8px">Первые ${prev.length} из ${dr.length} позиций.</p>
-    <div class="tw"><table>
-      <thead><tr><th>Тип</th><th>Дата</th><th>Менеджер</th><th>Контрагент</th>
-        <th>Артикул</th><th>Наименование</th>
-        <th style="text-align:right">Получено</th>
-        <th style="text-align:right">Товар б/НДС</th>
-        <th style="text-align:right">Услуги б/НДС</th>
-        <th>Документ</th></tr></thead>
-      <tbody>${prev.map(r=>`<tr>
-        <td><span class="pill ${r.isService?'pr':'pg'}">${r.isService?'услуга':'товар'}</span></td>
-        <td>${r.date}</td><td>${r.manager}</td><td>${r.counterpart}</td>
-        <td class="mono">${r.article}</td>
-        <td title="${r.name}">${r.name.substring(0,28)}${r.name.length>28?'…':''}</td>
-        <td style="text-align:right" class="mono">${fmt(r.received)}</td>
-        <td style="text-align:right" class="mono ${!r.isService?'tg':''}">${fmt(r.goodsNoVat)}</td>
-        <td style="text-align:right" class="mono">${fmt(r.serviceNoVat)}</td>
-        <td style="font-size:11px">${r.docType==='bank'?'🏦 банк':'💵 касса'}</td>
-      </tr>`).join('')}</tbody></table></div>`;
-}
-
-// ══════════════════════════════════════════════════════════════════════
-// RENDER STRUCTURE
-// ══════════════════════════════════════════════════════════════════════
-function renderStructure(types, raw) {
-  const tg=[
-    {t:'service',l:'Служебные строки',bg:'#fffbe6',bc:'#ffe066',tc:'#7a6000',d:'Параметры отчёта, фильтры'},
-    {t:'header',l:'Заголовки колонок',bg:'#eff6ff',bc:'#bfdbfe',tc:'#1e40af',d:'Многоуровневый заголовок (4 строки)'},
-    {t:'group',l:'Группа фонда',bg:'#f0fff4',bc:'#a8d8b8',tc:'#1a7a3a',d:'Строка группы с итогом'},
-    {t:'doc_bank',l:'Банковский документ',bg:'#f5f5f5',bc:'#d0d0d0',tc:'#555',d:'Поступление на расч. счёт'},
-    {t:'doc_cash',l:'Кассовый документ (ПКО)',bg:'#f5f5f5',bc:'#d0d0d0',tc:'#555',d:'Приходный кассовый ордер'},
-    {t:'data',l:'Позиция данных',bg:'#fff',bc:'#e0e0e0',tc:'#333',d:'Менеджер, артикул, суммы'},
-    {t:'total',l:'Итоговая строка',bg:'#f5f0ff',bc:'#d0b8ff',tc:'#6a1a9a',d:'Total — исключается'},
-  ];
-  let sh='<div style="background:#f7f9ff;border-radius:10px;padding:14px;border:1px solid #e8ecf8"><div style="font-size:13px;font-weight:600;margin-bottom:11px">Типы строк в файле</div>';
-  tg.forEach(g=>{
-    const cnt=types.filter(t=>t===g.t).length; if(!cnt) return;
-    const idx=types.findIndex(t=>t===g.t);
-    const sv=idx>=0?s(raw[idx][0]).substring(0,58):'';
-    sh+=`<div style="display:flex;align-items:flex-start;gap:9px;padding:8px 11px;border-radius:6px;margin-bottom:5px;background:${g.bg};border:1px solid ${g.bc}">
-      <span style="display:inline-block;padding:2px 7px;border-radius:4px;font-size:10px;font-weight:600;background:${g.bc};color:${g.tc};white-space:nowrap;min-width:50px;text-align:center">${cnt}</span>
-      <div><strong style="font-size:11px;color:${g.tc}">${g.l}</strong>
-      <span style="font-size:11px;color:#888;margin-left:7px">${g.d}</span>
-      ${sv?`<br><code style="font-size:10px;color:#666">"${sv}${sv.length===58?'…':''}"</code>`:''}</div></div>`;
-  });
-  sh+='</div>';
-  document.getElementById('stc').innerHTML=sh;
-}
-
-// ══════════════════════════════════════════════════════════════════════
-// DIRECTOR EDITOR
-// ══════════════════════════════════════════════════════════════════════
-function renderDir(containerId) {
-  const cont = document.getElementById(containerId);
-
-  let html = `<div class="dir-toolbar">
-    <h2>⚙️ Настройки менеджеров (${DIR.length})</h2>
-    <button class="btn btn-secondary btn-sm" id="addMgr-${containerId}">+ Добавить менеджера</button>
-    ${RAW ? `<button class="btn btn-primary btn-sm" id="recalc-${containerId}">▶ Пересчитать</button>` : ''}
-  </div>
-  <p style="font-size:11px;color:#888;margin-bottom:14px">
-    Измените настройки и нажмите <strong>Сохранить</strong> для каждого менеджера. Затем нажмите <strong>Пересчитать</strong> чтобы обновить реестр.
-  </p>
-  <div class="mgr-cards" id="mgrCards-${containerId}">`;
-
-  DIR.forEach((d, idx) => {
-    const ini = (d.manager_name||'').split(/\s+/).map(w=>w[0]||'').join('').toUpperCase().substring(0,2)||'?';
-    const isManual = d["режим_фикса"] === "вручную";
-    const isActive = d["активен"] !== false;
-    const thr = d["минимальный_порог"];
-    const thrVal = (thr===null||thr===undefined||thr===''||thr==='нет') ? '' : thr;
-
-    html += `<div class="mgr-card-edit" id="mcard-${containerId}-${idx}">
-      <div class="card-top">
-        <div class="avatar">${ini}</div>
-        <h3 id="cardtitle-${containerId}-${idx}">${d.manager_name||'Новый менеджер'}</h3>
-      </div>
-
-      <div class="frow full">
-        <div class="fld">
-          <label>Имя менеджера</label>
-          <input type="text" data-field="manager_name" data-idx="${idx}" data-cid="${containerId}" value="${escHtml(d.manager_name||'')}" placeholder="Имя менеджера">
-        </div>
-      </div>
-
-      <div class="frow">
-        <div class="fld">
-          <label>Режим фикса</label>
-          <select data-field="режим_фикса" data-idx="${idx}" data-cid="${containerId}">
-            <option value="по группе" ${d["режим_фикса"]==='по группе'?'selected':''}>по группе</option>
-            <option value="вручную"   ${d["режим_фикса"]==='вручную'?'selected':''}>вручную</option>
-          </select>
-        </div>
-        <div class="fld fld-emptype" id="fld-emptype-${containerId}-${idx}" ${isManual?'style="opacity:.4;pointer-events:none"':''}>
-          <label>Тип занятости</label>
-          <select data-field="тип_занятости" data-idx="${idx}" data-cid="${containerId}" ${isManual?'disabled':''}>
-            <option value="полная занятость"    ${d["тип_занятости"]==='полная занятость'?'selected':''}>полная занятость</option>
-            <option value="частичная занятость" ${d["тип_занятости"]==='частичная занятость'?'selected':''}>частичная занятость</option>
-          </select>
-        </div>
-      </div>
-
-      <div class="frow" id="fld-group-row-${containerId}-${idx}" ${isManual?'style="opacity:.4;pointer-events:none"':''}>
-        <div class="fld" style="grid-column:1/-1">
-          <label>Группа фикса</label>
-          <select data-field="группа_фикса" data-idx="${idx}" data-cid="${containerId}" ${isManual?'disabled':''}>
-            <option value="удалённый менеджер"             ${d["группа_фикса"]==='удалённый менеджер'?'selected':''}>удалённый менеджер</option>
-            <option value="фикс независимо от поступлений" ${d["группа_фикса"]==='фикс независимо от поступлений'?'selected':''}>фикс независимо от поступлений</option>
-            <option value="без оклада"                     ${d["группа_фикса"]==='без оклада'?'selected':''}>без оклада</option>
-          </select>
-        </div>
-      </div>
-
-      <div class="frow" id="fld-manual-row-${containerId}-${idx}" ${!isManual?'style="opacity:.4;pointer-events:none"':''}>
-        <div class="fld">
-          <label>Ручной оклад (EUR)</label>
-          <input type="number" data-field="ручной_фиксированный_оклад" data-idx="${idx}" data-cid="${containerId}"
-            value="${d["ручной_фиксированный_оклад"]||''}" placeholder="напр. 650" ${!isManual?'disabled':''}>
-        </div>
-        <div class="fld">
-          <label>Мин. порог (EUR, или пусто = нет)</label>
-          <input type="number" data-field="минимальный_порог" data-idx="${idx}" data-cid="${containerId}"
-            value="${thrVal}" placeholder="нет" ${!isManual?'disabled':''}>
-        </div>
-      </div>
-
-
-      <div class="bonus-section">
-        <div class="bonus-section-hdr">
-          <span>🎯 Бонусные ступени</span>
-          <button type="button" class="bonus-add" data-action="add-bonus" data-idx="${idx}" data-cid="${containerId}">+ Добавить ступень</button>
-        </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr auto;gap:6px;margin-bottom:4px;font-size:10px;color:#aaa;padding:0 2px">
-          <span>Планка (EUR)</span><span>Бонус (EUR)</span><span></span>
-        </div>
-        <div id="bonus-steps-${containerId}-${idx}">
-          ${(d["бонусы"]||[]).map((st,si)=>`
-          <div class="bonus-step" id="bstep-${containerId}-${idx}-${si}">
-            <input type="number" class="bonus-planка" data-bidx="${si}" placeholder="напр. 35000" value="${st["планка"]||''}">
-            <input type="number" class="bonus-bonus" data-bidx="${si}" placeholder="напр. 200" value="${st["бонус"]||''}">
-            <button type="button" class="bonus-del" data-action="del-bonus" data-idx="${idx}" data-cid="${containerId}" data-bidx="${si}">✕</button>
-          </div>`).join('')}
-        </div>
-        ${(d["бонусы"]||[]).filter(st=>st["планка"]&&st["бонус"]).length>0?`<div class="bonus-preview">при достижении планок: ${(d["бонусы"]||[]).filter(st=>st["планка"]&&st["бонус"]).map(st=>fmt(st["планка"])+" → +"+fmt(st["бонус"])).join(' | ')}</div>`:''}
-      </div>
-
-      <div class="toggle-row ${isActive?'active-on':'active-off'}" id="trow-${containerId}-${idx}">
-        <span class="toggle-lbl ${isActive?'on':'off'}" id="tlbl-${containerId}-${idx}">${isActive?'✓ Активен':'✗ Неактивен'}</span>
-        <button type="button" class="toggle-btn ${isActive?'on':'off'}" data-action="toggle-active" data-idx="${idx}" data-cid="${containerId}" id="tbtn-${containerId}-${idx}"></button>
-      </div>
-
-      <div id="card-fields-${containerId}-${idx}" class="${isActive?'':' inactive-overlay'}">
-      <!-- fields wrapper start -->
-      </div><!-- fields wrapper end -->
-
-      <div class="card-actions">
-        <button class="btn btn-danger btn-sm" data-action="delete" data-idx="${idx}" data-cid="${containerId}">Удалить</button>
-        <button class="btn btn-primary btn-sm" data-action="save" data-idx="${idx}" data-cid="${containerId}">Сохранить</button>
-      </div>
-    </div>`;
-  });
-
-  html += `</div>`;
-  cont.innerHTML = html;
-
-  // ── Events ───────────────────────────────────────────────────────
-  // режим_фикса toggle
-  cont.querySelectorAll('select[data-field="режим_фикса"]').forEach(sel => {
-    sel.addEventListener('change', () => {
-      const idx = +sel.dataset.idx, cid = sel.dataset.cid;
-      const manual = sel.value === 'вручную';
-      const grpRow    = document.getElementById(`fld-group-row-${cid}-${idx}`);
-      const manRow    = document.getElementById(`fld-manual-row-${cid}-${idx}`);
-      const empRow    = document.getElementById(`fld-emptype-${cid}-${idx}`);
-      grpRow.style.opacity = manual ? '0.4' : '1';
-      grpRow.style.pointerEvents = manual ? 'none' : '';
-      grpRow.querySelector('select').disabled = manual;
-      manRow.style.opacity = manual ? '1' : '0.4';
-      manRow.style.pointerEvents = manual ? '' : 'none';
-      manRow.querySelectorAll('input').forEach(i=>i.disabled=!manual);
-      empRow.style.opacity = manual ? '0.4' : '1';
-      empRow.style.pointerEvents = manual ? 'none' : '';
-      empRow.querySelector('select').disabled = manual;
-      markUnsaved(cid, idx);
-    });
-  });
-
-  // any field change → mark unsaved
-  cont.querySelectorAll('input,select').forEach(el => {
-    el.addEventListener('input', () => markUnsaved(el.dataset.cid, +el.dataset.idx));
-    el.addEventListener('change', () => markUnsaved(el.dataset.cid, +el.dataset.idx));
-  });
-
-  // save button
-  cont.querySelectorAll('[data-action="save"]').forEach(btn => {
-    btn.addEventListener('click', () => saveCard(btn.dataset.cid, +btn.dataset.idx));
-  });
-
-  // delete button
-  cont.querySelectorAll('[data-action="delete"]').forEach(btn => {
-    btn.addEventListener('click', () => {
-      if (!confirm(`Удалить менеджера "${DIR[+btn.dataset.idx].manager_name}"?`)) return;
-      DIR.splice(+btn.dataset.idx, 1);
-      refreshDir(); if (RAW) fullRun();
-    });
-  });
-
-  // active toggle button
-  cont.querySelectorAll('[data-action="toggle-active"]').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const idx = +btn.dataset.idx, cid = btn.dataset.cid;
-      const current = DIR[idx]['активен'] !== false;
-      DIR[idx]['активен'] = !current;
-      // update visuals immediately
-      const isNowActive = !current;
-      btn.className = 'toggle-btn ' + (isNowActive ? 'on' : 'off');
-      const lbl = document.getElementById(`tlbl-${cid}-${idx}`);
-      const row = document.getElementById(`trow-${cid}-${idx}`);
-      const fields = document.getElementById(`card-fields-${cid}-${idx}`);
-      if (lbl) { lbl.textContent = isNowActive ? '✓ Активен' : '✗ Неактивен'; lbl.className = 'toggle-lbl ' + (isNowActive ? 'on' : 'off'); }
-      if (row) { row.className = 'toggle-row ' + (isNowActive ? 'active-on' : 'active-off'); }
-      if (fields) { fields.className = isNowActive ? '' : ' inactive-overlay'; }
-      // auto-save this change and recalc
-      if (RAW) fullRun();
-    });
-  });
-
-  // add-bonus / del-bonus buttons
-  cont.querySelectorAll('[data-action="add-bonus"]').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const idx = +btn.dataset.idx;
-      if (!DIR[idx]["бонусы"]) DIR[idx]["бонусы"] = [];
-      DIR[idx]["бонусы"].push({"планка":"","бонус":""});
-      refreshDir();
-    });
-  });
-  cont.querySelectorAll('[data-action="del-bonus"]').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const idx = +btn.dataset.idx, bi = +btn.dataset.bidx;
-      if (DIR[idx]["бонусы"]) DIR[idx]["бонусы"].splice(bi, 1);
-      refreshDir(); if (RAW) fullRun();
-    });
-  });
-
-  // add button
-  const addBtn = document.getElementById(`addMgr-${containerId}`);
-  if (addBtn) addBtn.addEventListener('click', () => {
-    DIR.push({"manager_name":"","активен":true,"режим_фикса":"по группе","группа_фикса":"удалённый менеджер","тип_занятости":"полная занятость","бонусы":[]});
-    refreshDir();
-  });
-
-  // recalc
-  const rcBtn = document.getElementById(`recalc-${containerId}`);
-  if (rcBtn) rcBtn.addEventListener('click', () => { if (RAW) fullRun(); });
-}
-
-function markUnsaved(cid, idx) {
-  const card = document.getElementById(`mcard-${cid}-${idx}`);
-  if (!card) return;
-  card.classList.add('unsaved');
-  if (!card.querySelector('.unsaved-badge')) {
-    const b = document.createElement('span');
-    b.className='unsaved-badge'; b.textContent='не сохранено';
-    card.appendChild(b);
-  }
-}
-
-function saveCard(cid, idx) {
-  const card = document.getElementById(`mcard-${cid}-${idx}`);
-  const inputs = card.querySelectorAll('input[data-field],select[data-field]');
-  const obj = {};
-  inputs.forEach(el => {
-    const f = el.dataset.field;
-    if (f === 'ручной_фиксированный_оклад' || f === 'минимальный_порог') {
-      const v = el.value.trim();
-      obj[f] = v === '' ? null : parseFloat(v);
-    } else {
-      obj[f] = el.value;
-    }
-  });
-
-  // basic validation
-  if (!obj.manager_name || !obj.manager_name.trim()) {
-    alert('Имя менеджера не может быть пустым'); return;
-  }
-  if (!obj["режим_фикса"]) {
-    alert('Укажите режим_фикса'); return;
-  }
-  if (obj["режим_фикса"] === "вручную" && (obj["ручной_фиксированный_оклад"]===null || isNaN(obj["ручной_фиксированный_оклад"]))) {
-    alert('Укажите ручной_фиксированный_оклад (число)'); return;
-  }
-
-  // preserve активен flag (toggled separately)
-  obj['активен'] = DIR[idx]['активен'] !== false;
-
-  // read bonus steps from DOM
-  const stepsContainer = document.getElementById(`bonus-steps-${cid}-${idx}`);
-  const bonusSteps = [];
-  if (stepsContainer) {
-    const stepDivs = stepsContainer.querySelectorAll('.bonus-step');
-    stepDivs.forEach(div => {
-      const pl = div.querySelector('.bonus-planка');
-      const bn = div.querySelector('.bonus-bonus');
-      if (!pl || !bn) return;
-      const plv = pl.value.trim(), bnv = bn.value.trim();
-      if (plv === '' && bnv === '') return; // skip empty
-      if (plv === '' || isNaN(parseFloat(plv))) { alert('Бонусная планка должна быть числом'); return; }
-      if (bnv === '' || isNaN(parseFloat(bnv))) { alert('Сумма бонуса должна быть числом'); return; }
-      bonusSteps.push({"планка": parseFloat(plv), "бонус": parseFloat(bnv)});
-    });
-  }
-  obj['бонусы'] = bonusSteps;
-
-  DIR[idx] = obj;
-  card.classList.remove('unsaved');
-  const badge = card.querySelector('.unsaved-badge');
-  if (badge) badge.remove();
-
-  // update avatar + title
-  const ini = (obj.manager_name||'').split(/\s+/).map(w=>w[0]||'').join('').toUpperCase().substring(0,2)||'?';
-  const av = card.querySelector('.avatar');
-  const ti = document.getElementById(`cardtitle-${cid}-${idx}`);
-  if (av) av.textContent = ini;
-  if (ti) ti.textContent = obj.manager_name;
-
-  if (RAW) fullRun();
-}
-
-function escHtml(s) { return s.replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;'); }
-
-function refreshDir() {
-  renderDir('dirc');
-  renderDir('dirc2');
-}
-
-// ══════════════════════════════════════════════════════════════════════
-// FULL RUN (recalc everything)
-// ══════════════════════════════════════════════════════════════════════
-function fullRun() {
-  const raw = RAW;
-  const types = raw.map(r=>classify(r));
-  META = extractMeta(raw);
-  const dr = buildRows(raw);
-  const agg = aggMgr(dr);
-  const {res, errs} = runCalc(agg);
-
-  renderOverview(types, dr, res, errs);
-  renderFixed(res, errs);
-  renderPreview(dr);
-  renderStructure(types, raw);
-  refreshDir();
-}
-
-// ══════════════════════════════════════════════════════════════════════
-// FILE INPUT
-// ══════════════════════════════════════════════════════════════════════
-const ua=document.getElementById('ua'), fi=document.getElementById('fi');
-ua.addEventListener('dragover', e=>{e.preventDefault();ua.classList.add('drag')});
-ua.addEventListener('dragleave', ()=>ua.classList.remove('drag'));
-ua.addEventListener('drop', e=>{e.preventDefault();ua.classList.remove('drag');if(e.dataTransfer.files[0])go(e.dataTransfer.files[0])});
-fi.addEventListener('change', ()=>{if(fi.files[0])go(fi.files[0])});
-
-function go(file) {
-  FNAME=file.name;
-  document.getElementById('mp').style.display='block';
-  document.getElementById('dirPanel').style.display='none';
-  document.getElementById('cards').innerHTML='<div class="loading"><div class="spin"></div>Читаем файл…</div>';
-  ['ib','mb2','fpc','pvc','stc'].forEach(id=>document.getElementById(id).innerHTML='');
-
-  const r=new FileReader();
-  r.onload=e=>{
-    try {
-      const wb=XLSX.read(e.target.result,{type:'array',cellDates:true});
-      SHEET=wb.SheetNames[0];
-      RAW=XLSX.utils.sheet_to_json(wb.Sheets[SHEET],{header:1,defval:null,raw:true});
-      fullRun();
-    } catch(err) {
-      document.getElementById('cards').innerHTML=`<div class="eb"><h4>Ошибка</h4>${err.message}</div>`;
-    }
-  };
-  r.readAsArrayBuffer(file);
-}
-
-// ══════════════════════════════════════════════════════════════════════
-// TABS
-// ══════════════════════════════════════════════════════════════════════
-document.querySelectorAll('.tab').forEach(b=>{
-  b.addEventListener('click',()=>{
-    document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
-    document.querySelectorAll('.pane').forEach(p=>p.classList.remove('active'));
-    b.classList.add('active');
-    document.getElementById('pane-'+b.dataset.tab).classList.add('active');
-  });
+// Extended init to include provizion
+document.addEventListener('DOMContentLoaded', () => {
+  STATE.managers = loadManagers();
+  STATE.dedup    = loadDedupRegistry();
+  STATE.history  = loadHistory();
+  initProv();
+  initTabs();
+  initUpload();
+  renderDir();
+  renderHistoryList();
+  // Load existing deals from storage
+  PROV.deals = loadDeals();
+  document.getElementById('mainPanel').style.display = 'none';
+  // Show main panel always (for provizion even without xlsx)
+  document.getElementById('mainPanel').style.display = 'block';
 });
 
-// init
-renderDir('dirc');
-renderDir('dirc2');
+function switchProvTab(tab) {
+  document.querySelectorAll('[data-subtab]').forEach(b => b.classList.toggle('active', b.dataset.subtab === tab));
+  document.getElementById('provContent').style.display = tab === 'provDeals' ? '' : 'none';
+  document.getElementById('provSettingsContent').style.display = tab === 'provSettings' ? '' : 'none';
+  if (tab === 'provDeals') renderProvizion();
+  if (tab === 'provSettings') renderProvSettings();
+}
+
+// Override switchTab to handle prov tab
+const _origSwitchTab = switchTab;
+function switchTab(tab) {
+  _origSwitchTab(tab);
+  if (tab === 'prov') { renderProvizion(); renderProvSettings(); }
+}
 </script>
 </body>
 </html>
