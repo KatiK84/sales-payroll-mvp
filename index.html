@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sales Payroll MVP</title>
+  <link rel="stylesheet" href="./style.css" />
+  <script defer src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <script defer src="./app.js"></script>
+</head>
+<body>
+  <div class="container">
+    <header class="hero">
+      <h1>Sales Payroll MVP</h1>
+      <p class="subtitle">Тестовая GitHub Pages версия: шаг 1 — загрузка Excel и просмотр данных</p>
+    </header>
+
+    <section class="card">
+      <h2>1. Загрузка отчёта</h2>
+      <p>Выберите Excel-файл отчёта по поступлению денежных средств.</p>
+      <input type="file" id="fileInput" accept=".xlsx,.xls" />
+      <div id="status" class="status">Файл пока не загружен.</div>
+    </section>
+
+    <section class="card" id="summaryCard" hidden>
+      <h2>2. Сводка</h2>
+      <div class="stats">
+        <div class="stat">
+          <div class="stat-label">Строк</div>
+          <div class="stat-value" id="rowCount">0</div>
+        </div>
+        <div class="stat">
+          <div class="stat-label">Колонок</div>
+          <div class="stat-value" id="colCount">0</div>
+        </div>
+      </div>
+      <div>
+        <h3>Колонки</h3>
+        <ul id="columnsList" class="columns-list"></ul>
+      </div>
+    </section>
+
+    <section class="card" id="tableCard" hidden>
+      <div class="table-header">
+        <h2>3. Предпросмотр данных</h2>
+        <button id="downloadJsonBtn" class="btn" type="button">Скачать JSON предпросмотра</button>
+      </div>
+      <div class="table-wrap">
+        <table id="previewTable"></table>
+      </div>
+    </section>
+  </div>
+</body>
+</html>

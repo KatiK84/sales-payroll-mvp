@@ -1,0 +1,164 @@
+:root {
+  --bg: #f6f7fb;
+  --card: #ffffff;
+  --text: #1f2937;
+  --muted: #6b7280;
+  --border: #e5e7eb;
+  --accent: #111827;
+  --accent-2: #2563eb;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+}
+
+.container {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 32px 20px 48px;
+}
+
+.hero {
+  margin-bottom: 24px;
+}
+
+.hero h1 {
+  margin: 0 0 8px;
+  font-size: 36px;
+}
+
+.subtitle {
+  margin: 0;
+  color: var(--muted);
+  font-size: 16px;
+}
+
+.card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  padding: 20px;
+  margin-bottom: 20px;
+  box-shadow: 0 6px 18px rgba(17, 24, 39, 0.05);
+}
+
+.status {
+  margin-top: 14px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: #f3f4f6;
+  color: var(--muted);
+}
+
+.status.success {
+  background: #ecfdf5;
+  color: #065f46;
+}
+
+.status.error {
+  background: #fef2f2;
+  color: #991b1b;
+}
+
+.stats {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 18px;
+}
+
+.stat {
+  min-width: 140px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 14px;
+}
+
+.stat-label {
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.stat-value {
+  margin-top: 8px;
+  font-size: 28px;
+  font-weight: 700;
+}
+
+.columns-list {
+  margin: 0;
+  padding-left: 18px;
+  columns: 2;
+}
+
+.table-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.table-wrap {
+  overflow: auto;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 900px;
+}
+
+th, td {
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border);
+  text-align: left;
+  vertical-align: top;
+  font-size: 14px;
+}
+
+th {
+  position: sticky;
+  top: 0;
+  background: #f9fafb;
+  z-index: 1;
+}
+
+.btn {
+  border: 0;
+  background: var(--accent-2);
+  color: white;
+  padding: 10px 14px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.btn:hover {
+  opacity: 0.92;
+}
+
+input[type="file"] {
+  display: block;
+  margin-top: 8px;
+}
+
+@media (max-width: 768px) {
+  .columns-list {
+    columns: 1;
+  }
+
+  .table-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
