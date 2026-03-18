@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sales Payroll MVP v0.3</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f0f2f5;color:#1a1a2e;min-height:100vh;font-size:14px}
+.app{max-width:1200px;margin:0 auto;padding:24px 16px}
+header{margin-bottom:24px}
+header h1{font-size:22px;font-weight:600}
+header p{font-size:13px;color:#666;margin-top:3px}
+.upload-area{background:#fff;border:2px dashed #c0cae0;border-radius:12px;padding:40px 24px;text-align:center;cursor:pointer;transition:border-color .2s;margin-bottom:20px}
+.upload-area:hover,.upload-area.drag{border-color:#4f7fff}
+.ico{font-size:32px;margin-bottom:10px}
+.upload-area p{font-size:13px;color:#555;margin-bottom:4px}
+.hint{font-size:11px;color:#999;margin-bottom:16px}
+.btn-up{display:inline-block;background:#4f7fff;color:#fff;padding:9px 20px;border-radius:8px;cursor:pointer;font-size:13px;font-weight:500}
+.btn-up:hover{background:#3a6aee}
+.panel{background:#fff;border-radius:12px;padding:22px;box-shadow:0 1px 6px rgba(0,0,0,.07);margin-bottom:16px}
+.tabs{display:flex;gap:2px;border-bottom:2px solid #eee;margin-bottom:20px;flex-wrap:wrap}
+.tab{padding:9px 16px;border:none;background:none;cursor:pointer;font-size:13px;color:#888;border-bottom:2px solid transparent;margin-bottom:-2px;white-space:nowrap;font-weight:500}
+.tab:hover{color:#4f7fff}
+.tab.active{color:#4f7fff;border-bottom-color:#4f7fff}
+.pane{display:none}.pane.active{display:block}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:18px}
+.card{background:#f7f9ff;border-radius:10px;padding:14px 16px;border:1px solid #e8ecf8}
+.card.green{border-color:#b8f0c0;background:#f0fff4}
+.card.red{border-color:#ffc0c0;background:#fff4f4}
+.clbl{font-size:10px;color:#999;text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px}
+.cval{font-size:22px;font-weight:700}
+.card.green .cval{color:#1a7a3a}
+.card.red .cval{color:#c0392b}
+.csub{font-size:10px;color:#aaa;margin-top:3px}
+.info-box{background:#fffbe6;border:1px solid #ffe066;border-radius:8px;padding:12px 16px;margin-bottom:12px;font-size:12px;color:#7a6000}
+.info-box ul{padding-left:18px;margin-top:5px}.info-box li{margin-bottom:3px}
+.err-box{background:#fff4f4;border:1px solid #ffb0b0;border-radius:8px;padding:12px 16px;margin-bottom:12px;font-size:12px;color:#c0392b}
+.err-box h4{margin-bottom:8px;font-size:13px;font-weight:600}
+.meta-box{background:#f7f9ff;border-radius:8px;padding:14px 16px;font-size:12px;border:1px solid #e8ecf8;margin-bottom:12px}
+.meta-box h3{font-size:13px;font-weight:600;margin-bottom:8px}
+.mrow{display:flex;gap:12px;margin-bottom:5px}
+.mk{color:#888;min-width:140px;flex-shrink:0}.mv{font-weight:500}
+.twrap{overflow-x:auto;border-radius:8px;border:1px solid #eee}
+table{width:100%;border-collapse:collapse;font-size:12px}
+thead th{background:#f7f9ff;padding:9px 11px;text-align:left;font-weight:600;color:#555;border-bottom:2px solid #eee;white-space:nowrap}
+tbody td{padding:8px 11px;border-bottom:1px solid #f5f5f5}
+tbody tr:last-child td{border-bottom:none}
+tbody tr:hover td{background:#f9fbff}
+.pill{display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:500;white-space:nowrap}
+.py{background:#fff3cd;color:#856404}
+.pg{background:#d1f7e0;color:#1a7a3a}
+.pgr{background:#f0f0f0;color:#666}
+.pb{background:#dbeafe;color:#1e40af}
+.pp{background:#ede9fe;color:#6d28d9}
+.pr{background:#fee2e2;color:#b91c1c}
+.fix-summary{background:linear-gradient(135deg,#f0fff4,#e8f4fd);border:1px solid #a8d8b8;border-radius:10px;padding:16px 20px;margin-bottom:16px;display:flex;align-items:center;gap:24px;flex-wrap:wrap}
+.fsval{font-size:26px;font-weight:700;color:#1a7a3a}
+.fslbl{font-size:11px;color:#4a9a6a;margin-bottom:2px}
+.fsinfo{font-size:12px;color:#666}
+.spin{width:28px;height:28px;border:3px solid #eee;border-top-color:#4f7fff;border-radius:50%;animation:spin .7s linear infinite;margin:0 auto 10px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading{text-align:center;padding:32px;color:#888;font-size:13px}
+.sec-hdr{font-size:14px;font-weight:600;color:#333;margin-bottom:14px;padding-bottom:8px;border-bottom:1px solid #eee}
+.mono{font-family:monospace;font-size:11px}
+.tg{color:#1a7a3a;font-weight:600}
+.tm{color:#aaa}
+</style>
+</head>
+<body>
+<div class="app">
+  <header><h1>💰 Sales Payroll MVP</h1><p>v0.3 · Фиксированная часть оклада · Frontend only · GitHub Pages</p></header>
+  <div class="upload-area" id="ua">
+    <div class="ico">📂</div>
+    <p>Загрузите Excel-файл отчёта по поступлениям</p>
+    <p class="hint">.xlsx — выгрузка из ERP/1С</p>
+    <label><input type="file" id="fi" accept=".xlsx,.xls" hidden><span class="btn-up">Выбрать файл</span></label>
+  </div>
+  <div class="panel" id="mp" style="display:none">
+    <div class="tabs">
+      <button class="tab active" data-tab="ov">Обзор</button>
+      <button class="tab" data-tab="fp">🧮 Реестр фиксированной части</button>
+      <button class="tab" data-tab="pv">Предпросмотр данных</button>
+      <button class="tab" data-tab="mg">Менеджеры</button>
+      <button class="tab" data-tab="st">Структура файла</button>
+    </div>
+    <div class="pane active" id="pane-ov"><div class="cards" id="cards"></div><div id="ib"></div><div id="mb"></div></div>
+    <div class="pane" id="pane-fp"><div id="fpc"></div></div>
+    <div class="pane" id="pane-pv"><div id="pvc"></div></div>
+    <div class="pane" id="pane-mg"><div id="mgc"></div></div>
+    <div class="pane" id="pane-st"><div id="stc"></div></div>
+  </div>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script>
+const DIR=[
+  {"manager_name":"David K.","режим_фикса":"по группе","группа_фикса":"удалённый менеджер","тип_занятости":"полная занятость"},
+  {"manager_name":"Leonid S","режим_фикса":"по группе","группа_фикса":"удалённый менеджер","тип_занятости":"частичная занятость"},
+  {"manager_name":"Volodymyr","режим_фикса":"по группе","группа_фикса":"фикс независимо от поступлений","тип_занятости":"полная занятость"},
+  {"manager_name":"Volodymyr ","режим_фикса":"по группе","группа_фикса":"фикс независимо от поступлений","тип_занятости":"полная занятость"},
+  {"manager_name":"B2B Allianz","режим_фикса":"по группе","группа_фикса":"без оклада","тип_занятости":"полная занятость"}
+];
+
+const COL={date:0,counterpart:3,manager:4,article:7,name:8,qty:12,received:14,goodsNoVat:15,serviceNoVat:16,vat:17,total:18};
+
+function calcFixed(e,base){
+  const mode=e["режим_фикса"];
+  if(!mode)return{fixed:0,rule:"Не указан режим_фикса",isErr:true};
+  if(mode==="вручную"){
+    const sal=e["ручной_фиксированный_оклад"];
+    if(sal===undefined||sal===null||sal==="")return{fixed:0,rule:"вручную: не указан ручной_фиксированный_оклад",isErr:true};
+    const sn=parseFloat(sal);
+    if(isNaN(sn))return{fixed:0,rule:"вручную: оклад не число",isErr:true};
+    const thr=e["минимальный_порог"];
+    const hasThr=thr!==null&&thr!==undefined&&thr!==""&&thr!=="нет";
+    if(hasThr){
+      const tn=parseFloat(thr);
+      if(isNaN(tn))return{fixed:0,rule:"вручную: порог не число и не null",isErr:true};
+      return base>=tn
+        ?{fixed:sn,rule:`вручную: ${sn}, порог ${fmt(tn)} → выплачено (${fmt(base)} ≥ ${fmt(tn)})`,isErr:false}
+        :{fixed:0, rule:`вручную: ${sn}, порог ${fmt(tn)} → порог не достигнут (${fmt(base)} < ${fmt(tn)})`,isErr:false};
+    }
+    return{fixed:sn,rule:`вручную: ${sn}, порог нет → выплачено`,isErr:false};
+  }
+  if(mode==="по группе"){
+    const g=e["группа_фикса"],et=e["тип_занятости"];
+    if(!g)return{fixed:0,rule:'по группе: не указана группа_фикса',isErr:true};
+    if(!et&&g!=="без оклада")return{fixed:0,rule:'по группе: не указан тип_занятости',isErr:true};
+    if(g==="без оклада")return{fixed:0,rule:'без оклада → 0',isErr:false};
+    if(g==="фикс независимо от поступлений"){
+      if(et==="полная занятость")return{fixed:800,rule:'фикс всегда, полная занятость → 800',isErr:false};
+      if(et==="частичная занятость")return{fixed:400,rule:'фикс всегда, частичная занятость → 400',isErr:false};
+      return{fixed:0,rule:`неизвестный тип_занятости: "${et}"`,isErr:true};
+    }
+    if(g==="удалённый менеджер"){
+      if(et==="полная занятость")
+        return base>=10000?{fixed:800,rule:`полная занятость ≥ 10 000 → 800 (база: ${fmt(base)})`,isErr:false}
+                          :{fixed:400,rule:`полная занятость < 10 000 → 400 (база: ${fmt(base)})`,isErr:false};
+      if(et==="частичная занятость")
+        return base>=5000?{fixed:400,rule:`частичная занятость ≥ 5 000 → 400 (база: ${fmt(base)})`,isErr:false}
+                         :{fixed:200,rule:`частичная занятость < 5 000 → 200 (база: ${fmt(base)})`,isErr:false};
+      return{fixed:0,rule:`неизвестный тип_занятости: "${et}"`,isErr:true};
+    }
+    return{fixed:0,rule:`неизвестная группа_фикса: "${g}"`,isErr:true};
+  }
+  return{fixed:0,rule:`неизвестный режим_фикса: "${mode}"`,isErr:true};
+}
+
+const s=v=>v==null?'':String(v).trim();
+const n=v=>{if(v==null||v==='')return 0;const x=parseFloat(String(v).replace(',','.'));return isNaN(x)?0:x};
+const fmt=v=>{if(!v&&v!==0)return'—';if(v===0)return'0,00';return v.toLocaleString('de-DE',{minimumFractionDigits:2,maximumFractionDigits:2})};
+
+function classify(row){
+  const f=s(row[0]),nn=row.filter(v=>v!==null&&v!=='').length;
+  if(nn===0)return'empty';
+  if(f.includes('Data parameters')||f.includes('Дата начала')||f.includes('Дата окончания')||f.includes('Filter:'))return'service';
+  if(f==='Фонд'||f==='Документ'||f==='Дата')return'header';
+  if(row.some(v=>s(v)==='Документ основание'))return'header';
+  if(f==='Total'||f==='Итого')return'total';
+  if(/^0\d\s+фонд\s+/i.test(f))return'group';
+  if(/Поступление на расчетный счет\s+\d+/i.test(f))return'doc_bank';
+  if(/ПКО\s+[A-Z]+\d+/i.test(f))return'doc_cash';
+  if(/^\d{2}\.\d{2}\.\d{4}/.test(f))return'data';
+  return'unknown';
+}
+
+function extractMeta(raw){
+  const m={};
+  raw.slice(0,10).forEach(row=>{
+    const r=row.map(s).join(' ');
+    const a=r.match(/Дата начала[:\s]+(\d{2}\.\d{2}\.\d{4})/);
+    const b=r.match(/Дата окончания[:\s]+(\d{2}\.\d{2}\.\d{4})/);
+    if(a)m.start=a[1];if(b)m.end=b[1];
+    if(r.includes('фонд GH'))m.fund='01 фонд GH';
+  });
+  return m;
+}
+
+function buildRows(raw){
+  const rows=[];let fund='',doc='',docType='';
+  for(let i=0;i<raw.length;i++){
+    const row=raw[i],t=classify(row);
+    if(t==='group'){fund=s(row[0]);}
+    if(t==='doc_bank'){doc=s(row[0]);docType='bank';}
+    if(t==='doc_cash'){doc=s(row[0]);docType='cash';}
+    if(t==='data'){
+      const art=s(row[COL.article]),svc=n(row[COL.serviceNoVat]),gds=n(row[COL.goodsNoVat]);
+      rows.push({fund,document:doc,docType,date:s(row[COL.date]),counterpart:s(row[COL.counterpart]),
+        manager:s(row[COL.manager]),article:art,name:s(row[COL.name]),qty:n(row[COL.qty]),
+        received:n(row[COL.received]),goodsNoVat:gds,serviceNoVat:svc,
+        isService:art.includes('EUPL')||(svc>0&&gds===0)});
+    }
+  }
+  return rows;
+}
+
+function aggMgr(rows){
+  const m={};
+  rows.forEach(r=>{
+    const k=r.manager||'(не указан)';
+    if(!m[k])m[k]={name:k,rows:[],totalReceived:0,goodsSum:0,docs:new Set()};
+    m[k].rows.push(r);m[k].totalReceived+=r.received||0;m[k].goodsSum+=r.goodsNoVat||0;
+    if(r.document)m[k].docs.add(r.document);
+  });
+  return Object.values(m).sort((a,b)=>b.totalReceived-a.totalReceived);
+}
+
+function runCalc(agg){
+  const res=[],errs=[];
+  agg.forEach(m=>{
+    const e=DIR.find(d=>d.manager_name.trim()===m.name.trim());
+    if(!e){errs.push({manager:m.name,issue:'Не найден в справочнике менеджеров',base:m.goodsSum});return;}
+    const base=m.goodsSum,r=calcFixed(e,base);
+    if(r.isErr){errs.push({manager:m.name,issue:r.rule,base});return;}
+    const thr=e["минимальный_порог"];
+    const td=(thr===null||thr===undefined||thr===''||thr==='нет')?'нет':fmt(parseFloat(thr));
+    res.push({manager:m.name,mode:e["режим_фикса"]||'—',group:e["группа_фикса"]||'—',
+      empType:e["тип_занятости"]||'—',base,threshold:td,fixedSalary:r.fixed,rule:r.rule});
+  });
+  return{res,errs};
+}
+
+function mp(mode){
+  if(mode==='по группе')return`<span class="pill pb">${mode}</span>`;
+  if(mode==='вручную')return`<span class="pill pp">${mode}</span>`;
+  return`<span class="pill pgr">${mode}</span>`;
+}
+function gp(g){
+  if(g==='удалённый менеджер')return`<span class="pill py">${g}</span>`;
+  if(g==='фикс независимо от поступлений')return`<span class="pill pg">${g}</span>`;
+  if(g==='без оклада')return`<span class="pill pgr">${g}</span>`;
+  if(g==='—')return`<span class="pill pgr">вручную</span>`;
+  return`<span class="pill pgr">${g}</span>`;
+}
+function ep(e){
+  if(e==='полная занятость')return`<span class="pill pb">${e}</span>`;
+  if(e==='частичная занятость')return`<span class="pill pgr">${e}</span>`;
+  return`<span class="pill pgr">${e}</span>`;
+}
+
+let RAW=null,FNAME='',SHEET='';
+
+function run(){
+  const raw=RAW,types=raw.map(r=>classify(r)),meta=extractMeta(raw);
+  const dataRows=buildRows(raw),agg=aggMgr(dataRows);
+  const{res,errs}=runCalc(agg);
+  const svcCnt=types.filter(t=>t==='service').length;
+  const dataCnt=types.filter(t=>t==='data').length;
+  const docCnt=types.filter(t=>t.startsWith('doc_')).length;
+  const mgrs=[...new Set(dataRows.map(r=>r.manager).filter(Boolean))];
+  const totAmt=dataRows.reduce((x,r)=>x+(r.received||0),0);
+  const totFix=res.reduce((x,r)=>x+r.fixedSalary,0);
+
+  document.getElementById('cards').innerHTML=`
+    <div class="card"><div class="clbl">Строк данных</div><div class="cval">${dataCnt}</div><div class="csub">позиций</div></div>
+    <div class="card"><div class="clbl">Документов</div><div class="cval">${docCnt}</div><div class="csub">поступлений</div></div>
+    <div class="card"><div class="clbl">Менеджеров</div><div class="cval">${mgrs.length}</div><div class="csub">${mgrs.slice(0,4).join(', ')}${mgrs.length>4?'…':''}</div></div>
+    <div class="card"><div class="clbl">Получено всего</div><div class="cval" style="font-size:16px">${fmt(totAmt)}</div><div class="csub">на счёт + касса</div></div>
+    <div class="card green"><div class="clbl">Фикс итого</div><div class="cval" style="font-size:17px">${fmt(totFix)} EUR</div><div class="csub">${res.length} менеджер(а)</div></div>
+    ${errs.length?`<div class="card red"><div class="clbl">Ошибки</div><div class="cval">${errs.length}</div><div class="csub">нет в справочнике</div></div>`:''}`;
+
+  const infoItems=[
+    `База фикса: колонка "За товар без НДС" (col ${COL.goodsNoVat})`,
+    `Менеджер: колонка "Менеджер по продажам" (col ${COL.manager})`,
+  ];
+  const svcItems=dataRows.filter(r=>r.isService);
+  if(svcItems.length)infoItems.push(`Услуги (EUPL и др.): ${svcItems.length} строк — исключены из базы`);
+  if(svcCnt)infoItems.push(`Служебный заголовок отчёта — исключён`);
+  document.getElementById('ib').innerHTML=`<div class="info-box"><strong>Параметры расчёта</strong><ul>${infoItems.map(i=>`<li>${i}</li>`).join('')}</ul></div>`;
+  document.getElementById('mb').innerHTML=`<div class="meta-box"><h3>Параметры отчёта</h3>
+    <div class="mrow"><span class="mk">Файл</span><span class="mv">${FNAME}</span></div>
+    <div class="mrow"><span class="mk">Лист</span><span class="mv">${SHEET}</span></div>
+    ${meta.start?`<div class="mrow"><span class="mk">Период начала</span><span class="mv">${meta.start}</span></div>`:''}
+    ${meta.end?`<div class="mrow"><span class="mk">Период окончания</span><span class="mv">${meta.end}</span></div>`:''}
+    ${meta.fund?`<div class="mrow"><span class="mk">Фонд</span><span class="mv">${meta.fund}</span></div>`:''}
+  </div>`;
+
+  const period=(meta.start&&meta.end)?`${meta.start} — ${meta.end}`:'—';
+  const totRow=`<tr style="background:#f0fff4;font-weight:600">
+    <td colspan="6" style="text-align:right;padding-right:16px;color:#666;font-size:12px">Итого фиксированный оклад:</td>
+    <td style="text-align:right" class="mono tg">${fmt(totFix)}</td><td></td></tr>`;
+  let fp=`<div class="sec-hdr">Реестр фиксированной части по менеджерам</div>
+    <div class="fix-summary">
+      <div><div class="fslbl">Итоговый фиксированный оклад</div><div class="fsval">${fmt(totFix)} EUR</div></div>
+      <div class="fsinfo">${res.length} менеджер(а) · Период: ${period}</div>
+    </div>`;
+  if(res.length){
+    fp+=`<div class="twrap" style="margin-bottom:16px"><table>
+      <thead><tr><th>Менеджер</th><th>Режим фикса</th><th>Группа фикса</th><th>Тип занятости</th>
+        <th style="text-align:right">База поступлений, EUR</th>
+        <th style="text-align:right">Мин. порог</th>
+        <th style="text-align:right">Фиксированный оклад, EUR</th>
+        <th>Результат правила</th></tr></thead>
+      <tbody>
+        ${res.map(r=>`<tr>
+          <td><strong>${r.manager}</strong></td>
+          <td>${mp(r.mode)}</td><td>${gp(r.group)}</td><td>${ep(r.empType)}</td>
+          <td style="text-align:right" class="mono">${fmt(r.base)}</td>
+          <td style="text-align:right" class="mono">${r.threshold}</td>
+          <td style="text-align:right" class="mono ${r.fixedSalary>0?'tg':'tm'}">${fmt(r.fixedSalary)}</td>
+          <td class="mono" style="color:#666">${r.rule}</td>
+        </tr>`).join('')}${totRow}
+      </tbody></table></div>`;
+  }
+  if(errs.length){
+    fp+=`<div class="err-box"><h4>Ошибки / Исключения (${errs.length})</h4>
+      <div class="twrap"><table>
+        <thead><tr><th style="background:#fff4f4;color:#c0392b">Менеджер</th>
+          <th style="background:#fff4f4;color:#c0392b">Проблема</th>
+          <th style="background:#fff4f4;color:#c0392b;text-align:right">База поступлений</th></tr></thead>
+        <tbody>${errs.map(e=>`<tr><td>${e.manager}</td><td>${e.issue}</td><td style="text-align:right" class="mono">${fmt(e.base)}</td></tr>`).join('')}
+        </tbody></table></div>
+      <p style="margin-top:10px;font-size:11px">Добавьте этих менеджеров в справочник managers.json и перезагрузите файл.</p>
+    </div>`;
+  }
+  document.getElementById('fpc').innerHTML=fp;
+
+  const prev=dataRows.slice(0,30);
+  document.getElementById('pvc').innerHTML=`
+    <p style="font-size:11px;color:#999;margin-bottom:10px">Первые ${prev.length} из ${dataRows.length} позиций.</p>
+    <div class="twrap"><table>
+      <thead><tr><th>Тип</th><th>Дата</th><th>Менеджер</th><th>Контрагент</th><th>Артикул</th><th>Наименование</th>
+        <th style="text-align:right">Получено</th><th style="text-align:right">Товар б/НДС</th>
+        <th style="text-align:right">Услуги б/НДС</th><th>Документ</th></tr></thead>
+      <tbody>${prev.map(r=>`<tr>
+        <td><span class="pill ${r.isService?'pr':'pg'}">${r.isService?'услуга':'товар'}</span></td>
+        <td>${r.date}</td><td>${r.manager}</td><td>${r.counterpart}</td>
+        <td class="mono">${r.article}</td>
+        <td title="${r.name}">${r.name.substring(0,30)}${r.name.length>30?'…':''}</td>
+        <td style="text-align:right" class="mono">${fmt(r.received)}</td>
+        <td style="text-align:right" class="mono ${!r.isService?'tg':''}">${fmt(r.goodsNoVat)}</td>
+        <td style="text-align:right" class="mono">${fmt(r.serviceNoVat)}</td>
+        <td style="font-size:11px">${r.docType==='bank'?'🏦 банк':'💵 касса'}</td>
+      </tr>`).join('')}</tbody></table></div>`;
+
+  let mh=`<p style="font-size:11px;color:#999;margin-bottom:12px">${period}</p>`;
+  agg.forEach(m=>{
+    const ini=m.name.split(/\s+/).map(w=>w[0]||'').join('').toUpperCase().substring(0,2);
+    const gOnly=m.rows.filter(r=>!r.isService).reduce((x,r)=>x+(r.goodsNoVat||0),0);
+    const de=DIR.find(d=>d.manager_name.trim()===m.name.trim());
+    mh+=`<div style="background:#f7f9ff;border-radius:10px;padding:12px 16px;margin-bottom:10px;display:flex;align-items:center;gap:14px;border:1px solid #e8ecf8">
+      <div style="width:40px;height:40px;border-radius:50%;background:#dbeafe;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;color:#1e40af;flex-shrink:0">${ini}</div>
+      <div style="flex:1">
+        <div style="font-weight:600;margin-bottom:3px">${m.name}</div>
+        <div style="font-size:11px;color:#888">${m.rows.length} позиций · ${m.docs.size} документов · ${de?gp(de["группа_фикса"]||'вручную'):'<span style="color:#c0392b;font-size:11px">⚠ нет в справочнике</span>'}</div>
+      </div>
+      <div style="text-align:right">
+        <div style="font-size:17px;font-weight:700;color:#1a7a3a">${fmt(gOnly)}</div>
+        <div style="font-size:10px;color:#aaa">товар без НДС (база фикса)</div>
+        <div style="font-size:10px;color:#aaa">получено всего: ${fmt(m.totalReceived)}</div>
+      </div></div>`;
+  });
+  document.getElementById('mgc').innerHTML=mh;
+
+  const tg=[
+    {t:'service',l:'Служебные строки',bg:'#fffbe6',bc:'#ffe066',tc:'#7a6000',d:'Параметры отчёта, фильтры'},
+    {t:'header',l:'Заголовки колонок',bg:'#eff6ff',bc:'#bfdbfe',tc:'#1e40af',d:'Многоуровневый заголовок (4 строки)'},
+    {t:'group',l:'Группа фонда',bg:'#f0fff4',bc:'#a8d8b8',tc:'#1a7a3a',d:'Строка группы с итогом'},
+    {t:'doc_bank',l:'Банковский документ',bg:'#f5f5f5',bc:'#d0d0d0',tc:'#555',d:'Поступление на расч. счёт'},
+    {t:'doc_cash',l:'Кассовый документ (ПКО)',bg:'#f5f5f5',bc:'#d0d0d0',tc:'#555',d:'Приходный кассовый ордер'},
+    {t:'data',l:'Позиция данных',bg:'#fff',bc:'#e0e0e0',tc:'#333',d:'Менеджер, артикул, суммы'},
+    {t:'total',l:'Итоговая строка',bg:'#f5f0ff',bc:'#d0b8ff',tc:'#6a1a9a',d:'Total — исключается'},
+  ];
+  let sh='<div style="background:#f7f9ff;border-radius:10px;padding:16px;border:1px solid #e8ecf8"><div style="font-size:13px;font-weight:600;margin-bottom:12px">Типы строк в файле</div>';
+  tg.forEach(g=>{
+    const cnt=types.filter(t=>t===g.t).length;if(!cnt)return;
+    const idx=types.findIndex(t=>t===g.t);
+    const sv=idx>=0?s(raw[idx][0]).substring(0,60):'';
+    sh+=`<div style="display:flex;align-items:flex-start;gap:10px;padding:9px 12px;border-radius:6px;margin-bottom:6px;background:${g.bg};border:1px solid ${g.bc}">
+      <span style="display:inline-block;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:600;background:${g.bc};color:${g.tc};white-space:nowrap;min-width:55px;text-align:center">${cnt}</span>
+      <div><strong style="font-size:12px;color:${g.tc}">${g.l}</strong><span style="font-size:11px;color:#888;margin-left:8px">${g.d}</span>
+      ${sv?`<br><code style="font-size:10px;color:#666">"${sv}${sv.length===60?'…':''}"</code>`:''}</div></div>`;
+  });
+  sh+='</div>';
+  document.getElementById('stc').innerHTML=sh;
+}
+
+const ua=document.getElementById('ua'),fi=document.getElementById('fi');
+ua.addEventListener('dragover',e=>{e.preventDefault();ua.classList.add('drag')});
+ua.addEventListener('dragleave',()=>ua.classList.remove('drag'));
+ua.addEventListener('drop',e=>{e.preventDefault();ua.classList.remove('drag');if(e.dataTransfer.files[0])go(e.dataTransfer.files[0])});
+fi.addEventListener('change',()=>{if(fi.files[0])go(fi.files[0])});
+
+function go(file){
+  FNAME=file.name;
+  document.getElementById('mp').style.display='block';
+  document.getElementById('cards').innerHTML='<div class="loading"><div class="spin"></div>Читаем файл…</div>';
+  ['ib','mb','fpc','pvc','mgc','stc'].forEach(id=>document.getElementById(id).innerHTML='');
+  const r=new FileReader();
+  r.onload=e=>{
+    try{
+      const wb=XLSX.read(e.target.result,{type:'array',cellDates:true});
+      SHEET=wb.SheetNames[0];
+      RAW=XLSX.utils.sheet_to_json(wb.Sheets[SHEET],{header:1,defval:null,raw:false});
+      run();
+    }catch(e){document.getElementById('cards').innerHTML=`<div class="err-box"><h4>Ошибка чтения файла</h4>${e.message}</div>`}
+  };
+  r.readAsArrayBuffer(file);
+}
+
+document.querySelectorAll('.tab').forEach(b=>{
+  b.addEventListener('click',()=>{
+    document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+    document.querySelectorAll('.pane').forEach(p=>p.classList.remove('active'));
+    b.classList.add('active');
+    document.getElementById('pane-'+b.dataset.tab).classList.add('active');
+  });
+});
+</script>
+</body>
+</html>
