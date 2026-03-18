@@ -12,7 +12,7 @@
   <div class="container">
     <header class="hero">
       <h1>Sales Payroll MVP</h1>
-      <p class="subtitle">Тестовая GitHub Pages версия: шаг 1 — загрузка Excel и просмотр данных</p>
+      <p class="subtitle">GitHub Pages версия: шаг 2 — нормализация колонок и первичная очистка строк</p>
     </header>
 
     <section class="card">
@@ -23,26 +23,51 @@
     </section>
 
     <section class="card" id="summaryCard" hidden>
-      <h2>2. Сводка</h2>
+      <h2>2. Сводка обработки</h2>
       <div class="stats">
         <div class="stat">
-          <div class="stat-label">Строк</div>
-          <div class="stat-value" id="rowCount">0</div>
+          <div class="stat-label">Исходных строк</div>
+          <div class="stat-value" id="initialRows">0</div>
+        </div>
+        <div class="stat">
+          <div class="stat-label">После очистки</div>
+          <div class="stat-value" id="finalRows">0</div>
+        </div>
+        <div class="stat">
+          <div class="stat-label">Удалено пустых</div>
+          <div class="stat-value" id="droppedRows">0</div>
         </div>
         <div class="stat">
           <div class="stat-label">Колонок</div>
           <div class="stat-value" id="colCount">0</div>
         </div>
       </div>
-      <div>
-        <h3>Колонки</h3>
-        <ul id="columnsList" class="columns-list"></ul>
+
+      <div class="two-cols">
+        <div>
+          <h3>Нормализованные колонки</h3>
+          <ul id="columnsList" class="columns-list"></ul>
+        </div>
+        <div>
+          <h3>Распознанные числовые колонки</h3>
+          <ul id="numericList" class="columns-list"></ul>
+        </div>
+      </div>
+    </section>
+
+    <section class="card" id="mappingCard" hidden>
+      <div class="table-header">
+        <h2>3. Карта колонок</h2>
+        <button id="downloadMappingBtn" class="btn secondary" type="button">Скачать JSON mapping</button>
+      </div>
+      <div class="table-wrap">
+        <table id="mappingTable"></table>
       </div>
     </section>
 
     <section class="card" id="tableCard" hidden>
       <div class="table-header">
-        <h2>3. Предпросмотр данных</h2>
+        <h2>4. Предпросмотр после очистки</h2>
         <button id="downloadJsonBtn" class="btn" type="button">Скачать JSON предпросмотра</button>
       </div>
       <div class="table-wrap">
