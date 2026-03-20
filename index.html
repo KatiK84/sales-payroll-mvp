@@ -226,9 +226,11 @@ tbody tr:hover td{background:#f9fbff}
     <div class="pane" id="pane-prov">
       <div class="stabs">
         <button class="stab active" onclick="goStab('prov-deals')">Реестр сделок JTL</button>
+        <button class="stab" onclick="goStab('prov-all')">📊 Все сделки в провизион</button>
         <button class="stab" onclick="goStab('prov-plat')">Настройки платформ</button>
       </div>
       <div id="prov-deals"></div>
+      <div id="prov-all" style="display:none"></div>
       <div id="prov-plat" style="display:none"></div>
     </div>
     <div class="pane" id="pane-ded"><div id="ded"></div></div>
@@ -313,7 +315,7 @@ function saveProv(v) { lsSet(LS.prov,v); }
 const APP = {
   raw:null, fileName:'', sheetName:'', payroll:null,
   managers:null, dedup:null, hist:null, deals:null, ddDedup:null, provSettings:null,
-  provFilter:'all', provSearch:'', provSort:null, fpMgrFilter:'',
+  provFilter:'all', provSearch:'', provSort:null, provAllMgr:'all', fpMgrFilter:'',
   histView:null, currentTab:'ov', histDetailTab:'summary', selMonth:null, selYear:null,
 };
 
@@ -362,8 +364,10 @@ function goTab(id) {
 function goStab(id) {
   document.querySelectorAll('.stab').forEach(b=>b.classList.toggle('active',b.getAttribute('onclick').includes(id)));
   document.getElementById('prov-deals').style.display = id==='prov-deals'?'':'none';
+  document.getElementById('prov-all').style.display   = id==='prov-all'?'':'none';
   document.getElementById('prov-plat').style.display  = id==='prov-plat'?'':'none';
   if(id==='prov-deals') renderDeals();
+  if(id==='prov-all')   renderProvAll();
   if(id==='prov-plat')  renderProvPlat();
 }
 
@@ -642,6 +646,9 @@ function runPayroll() {
       &&(d.verkaeufer||'').trim()===vkName
     );
     const provBase=provDealsForMgr.reduce((s,d)=>{
+      // New-style: amount already pre-split (isJointMain or isJointCopy)
+      if(d.isJointMain||d.isJointCopy) return s+(d.gesamtbetrag||0);
+      // Old-style joint (legacy): calc share from joint array
       if(d.status==='совместная'&&d.joint){
         const sh=d.joint.find(j=>j.manager.trim()===m.name.trim()||j.manager.trim()===vkName);
         return s+(sh?d.gesamtbetrag*sh.pct/100:0);
@@ -686,6 +693,7 @@ function runPayroll() {
       .filter(d=>(d.status==='авто'||d.status==='вручную_ок'||d.status==='совместная'||d.status==='учтена')
                 &&(d.verkaeufer||'').trim()===vkName2)
       .reduce((s,d)=>{
+        if(d.isJointMain||d.isJointCopy) return s+(d.gesamtbetrag||0);
         if(d.status==='совместная'&&d.joint){
           const sh=d.joint.find(j=>j.manager.trim()===e.manager_name.trim()||j.manager.trim()===vkName2);
           return s+(sh?d.gesamtbetrag*sh.pct/100:0);
@@ -1812,12 +1820,25 @@ function renderDeals() {
     ${APP.provSearch?`<button class="btn btn-s btn-sm" onclick="APP.provSearch='';renderDeals()">✕</button>`:''}
     ${provSearch&&filt.length!==deals.length?`<span style="font-size:11px;color:#888">Найдено: ${filt.length}</span>`:''}
     ${APP.provFilter==='kv'?`
-    <span style="font-size:11px;color:#888;margin-left:4px">Сортировка по дате:</span>
+    <span style="font-size:11px;color:#888;margin-left:4px">Сортировка:</span>
     <button class="btn btn-sm ${APP.provSort==='asc'?'btn-ok':'btn-s'}" onclick="APP.provSort='asc';renderDeals()" title="Сначала старые">↑ Старые</button>
     <button class="btn btn-sm ${APP.provSort==='desc'?'btn-ok':'btn-s'}" onclick="APP.provSort='desc';renderDeals()" title="Сначала новые">↓ Новые</button>
     ${APP.provSort?`<button class="btn btn-sm btn-d" onclick="APP.provSort=null;renderDeals()" title="Сбросить сортировку">✕</button>`:''}
     `:''}
-  </div>`;
+  </div>
+  ${APP.provFilter==='kv'&&cnt(DS.QUAR)>0?`
+  <div style="background:#fffbeb;border:1.5px solid #fcd34d;border-radius:10px;padding:12px 16px;margin-bottom:14px;display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+    <span style="font-size:18px">🔄</span>
+    <div style="flex:1;min-width:180px">
+      <strong style="font-size:13px;color:#92400e">Обновить карантин из JTL</strong>
+      <p style="font-size:11px;color:#78350f;margin-top:2px">Загрузите выписку JTL по старому периоду — система обновит только сделки в карантине, новые не создаст</p>
+    </div>
+    <label class="btn btn-sm" style="cursor:pointer;background:#f59e0b;color:#fff;border-color:#f59e0b;white-space:nowrap">
+      📂 Выбрать JTL CSV
+      <input type="file" accept=".csv,.txt" style="display:none" onchange="updateQuarantine(this)">
+    </label>
+  </div>`:''}
+  `;
   if(!deals.length){
     if(showJtlWarn){ h+=jtlWarningHtml('prov'); }
     if(!APP.raw){
@@ -1850,11 +1871,14 @@ function renderDeals() {
       <td style="text-align:right" class="mono">${fmt(d.gesamtbetrag)}</td>
       <td style="font-size:10px" class="mono">${d.rechnungsnummer||'<span class="tm">—</span>'}</td>
       <td style="font-size:10px" class="mono">${d.lieferschein||(d.versanddatum?d.versanddatum:'<span class="tm">—</span>')}</td>
-      <td>${statusBadge(d.status)}<br><span style="font-size:9px;color:#aaa">${d.reason}</span>
-        ${d.status===DS.OK&&d.manualDocs?`<br><span style="font-size:9px;color:#1a7a3a">${['gelang','fracht','rechnung','ausgang','andere'].filter(k=>d.manualDocs[k]).map(k=>({'gelang':'✓ Gelangenb.','fracht':'✓ CMR','rechnung':'✓ Rechnung','ausgang':'✓ Ausgang','andere':'✓ Andere'})[k]).join(' ')}</span>`:''}</td>
-      <td>${d.status===DS.AUTO||d.status===DS.OK?`<button class="btn btn-s btn-sm" onclick="openJoint(${oi})">👥</button>`:''}
+      <td>${statusBadge(d.status)}
+        ${d.isJointCopy?`<br><span style="font-size:9px;color:#6d28d9">👥 копия · ${fmt(d.gesamtbetrag)} EUR</span>`:''}
+        ${d.isJointMain?`<br><span style="font-size:9px;color:#6d28d9">👥 осн. · ${fmt(d.gesamtbetrag)} EUR из ${fmt(d.gesamtbetragOriginal)}</span>`:''}
+        <br><span style="font-size:9px;color:#aaa">${d.reason}</span>
+        ${(d.status===DS.OK||d.isJointMain)&&d.manualDocs?`<br><span style="font-size:9px;color:#1a7a3a">${['gelang','fracht','ausgang','andere'].filter(k=>d.manualDocs[k]).map(k=>({'gelang':'✓ Gelangenb.','fracht':'✓ CMR','ausgang':'✓ Ausgang','andere':'✓ Andere'})[k]).join(' ')}</span>`:''}</td>
+      <td>${(d.status===DS.AUTO||d.status===DS.OK||d.isJointMain)&&!d.isJointCopy?`<button class="btn btn-s btn-sm" onclick="openJoint(${oi})" title="Совместная сделка">👥</button>`:''}
           ${d.status===DS.MANUAL?`<button class="btn btn-p btn-sm" onclick="mOK(${oi})">✓</button>`:''}
-          ${d.status===DS.JOINT?`<button class="btn btn-s btn-sm" onclick="openJoint(${oi})">✏️</button>`:''}</td>
+          ${d.isJointCopy?`<span style="font-size:10px;color:#9ca3af">копия</span>`:''}</td>
     </tr>`;}).join('')}
     </tbody></table></div>
     <p style="font-size:11px;color:#aaa;margin-top:6px">Показано ${filt.length} из ${deals.length}</p>`;
@@ -1868,6 +1892,117 @@ function renderDeals() {
 }
 function setProvFilt(f){APP.provFilter=f;renderDeals();}
 function clearDeals(){if(!confirm('Очистить реестр сделок?'))return;APP.deals=[];saveDeals(APP.deals);renderDeals();if(APP.raw)rerun();}
+
+// ── Обновление карантина из JTL-выписки ───────────────────────────────
+function updateQuarantine(input) {
+  const file = input.files[0]; if(!file) return;
+  input.value = '';
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const parsed = parseCSV(e.target.result);
+      _applyQuarantineUpdate(parsed.rows, parsed.header);
+    } catch(err) {
+      alert('Ошибка чтения файла: ' + err.message);
+    }
+  };
+  reader.readAsText(file, 'utf-8');
+}
+
+function _applyQuarantineUpdate(rows, header) {
+  const excl = APP.provSettings.excludedPlatforms || [];
+  const quarDeals = APP.deals.filter(d => d.status === DS.QUAR);
+
+  // Build lookup: Bestellnummer → quarantine deal index in APP.deals
+  const quarMap = {};
+  APP.deals.forEach((d, i) => {
+    if (d.status === DS.QUAR) quarMap[(d.bestellnummer||'').trim().toLowerCase()] = i;
+  });
+
+  const result = { total: rows.length, matched: 0, toAuto: [], toManual: [], unchanged: [], notFound: 0 };
+
+  rows.forEach(row => {
+    const bstNr = (row['Bestellnummer']||'').trim();
+    if (!bstNr) return;
+    const key = bstNr.toLowerCase();
+    if (!(key in quarMap)) { result.notFound++; return; }
+
+    const idx = quarMap[key];
+    const deal = APP.deals[idx];
+
+    // Pull updated fields from the new CSV row
+    const newRech  = (row['Rechnungsnummer']||'').trim();
+    const newLief  = (row['Lieferschein']||'').trim();
+    const newVers  = (row['Versanddatum']||'').trim();
+    const newMwst  = parseFloat((row['MwSt']||'').replace(',','.'));
+
+    // Update deal fields
+    if (newRech)  deal.rechnungsnummer = newRech;
+    if (newLief)  deal.lieferschein    = newLief;
+    if (newVers)  deal.versanddatum    = newVers;
+    if (!isNaN(newMwst)) deal.mwst     = newMwst;
+
+    // Reclassify
+    const rech = (deal.rechnungsnummer||'').trim();
+    const lief = (deal.lieferschein||'').trim();
+    const vers = (deal.versanddatum||'').trim();
+    const mwst = deal.mwst;
+    const plat = deal.plattform||'';
+
+    let ns, nr;
+    if (excl.includes(plat)) {
+      ns = DS.EXCL; nr = `Платформа исключена: ${plat}`;
+    } else if (rech && (lief || vers)) {
+      if (isNaN(mwst) || mwst === 0) { ns = DS.MANUAL; nr = 'MwSt = 0 → ручная проверка (документы есть)'; }
+      else { ns = DS.AUTO; nr = 'Rechnung + Lieferschein/Versanddatum'; }
+    } else {
+      const miss = []; if(!rech) miss.push('Rechnungsnummer'); if(!lief&&!vers) miss.push('Lieferschein/Versanddatum');
+      const mn = (isNaN(mwst)||mwst===0) ? ' + MwSt=0' : '';
+      ns = DS.QUAR; nr = `Карантин: нет ${miss.join(', ')}${mn}`;
+    }
+
+    result.matched++;
+    if (ns === DS.AUTO)   result.toAuto.push(deal.bestellnummer);
+    else if (ns === DS.MANUAL) result.toManual.push(deal.bestellnummer);
+    else                  result.unchanged.push(deal.bestellnummer);
+
+    deal.status = ns;
+    deal.reason = nr;
+  });
+
+  saveDeals(APP.deals);
+  if (APP.raw) rerun();
+  renderDeals();
+  _showQuarantineUpdateResult(result);
+}
+
+function _showQuarantineUpdateResult(r) {
+  document.getElementById('quar-update-modal')?.remove();
+  const modal = document.createElement('div');
+  modal.className = 'modal-overlay';
+  modal.id = 'quar-update-modal';
+  const changed = r.toAuto.length + r.toManual.length;
+  modal.innerHTML = `
+    <div class="modal" onclick="event.stopPropagation()" style="max-width:480px">
+      <h3>🔄 Результат обновления карантина</h3>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:14px 0">
+        <div class="card"><div class="clbl">Строк в файле</div><div class="cval">${r.total}</div></div>
+        <div class="card"><div class="clbl">Совпадений в карантине</div><div class="cval">${r.matched}</div></div>
+        <div class="card g"><div class="clbl">→ Авто-закрытые</div><div class="cval">${r.toAuto.length}</div></div>
+        <div class="card v"><div class="clbl">→ Ручная проверка</div><div class="cval">${r.toManual.length}</div></div>
+        <div class="card y"><div class="clbl">Без изменений</div><div class="cval">${r.unchanged.length}</div></div>
+        <div class="card"><div class="clbl">Не в карантине (пропущено)</div><div class="cval" style="color:#aaa">${r.notFound}</div></div>
+      </div>
+      ${r.toAuto.length?`<div style="font-size:11px;color:#1a7a3a;margin-bottom:6px"><strong>✅ Авто-закрытые:</strong> ${r.toAuto.join(', ')}</div>`:''}
+      ${r.toManual.length?`<div style="font-size:11px;color:#6d28d9;margin-bottom:6px"><strong>🟣 Ручная проверка:</strong> ${r.toManual.join(', ')}</div>`:''}
+      ${!changed?'<div style="font-size:12px;color:#888;margin-bottom:10px">Ни одна сделка не изменила статус — документы ещё не появились.</div>':''}
+      <div class="modal-footer">
+        <button class="btn btn-ok" onclick="document.getElementById(\'quar-update-modal\').remove()">OK</button>
+      </div>
+    </div>`;
+  modal.addEventListener('click', () => modal.remove());
+  document.body.appendChild(modal);
+}
 function mOK(idx) {
   const deal = APP.deals[idx];
   // Remove any existing modal
@@ -1983,17 +2118,60 @@ function _updateJointTotal(idx) {
   }
 }
 
+// ── Joint split helper ────────────────────────────────────────────────
+// jointShares = [{manager, pct}, ...] first element = main manager
+// mainStatus = DS.OK (from manual confirm) | DS.AUTO (from auto-closed)
+function _applyJointSplit(idx, jointShares, mainStatus) {
+  const deal = APP.deals[idx];
+  // Remove existing copies for this deal if re-editing
+  if(deal.jointGroupId) {
+    APP.deals = APP.deals.filter(d => !(d.isJointCopy && d.jointGroupId === deal.jointGroupId));
+  }
+  const originalAmount = deal.gesamtbetragOriginal || deal.gesamtbetrag;
+  const groupId = deal.bestellnummer + '_jg_' + Date.now();
+  const mainShare = jointShares[0];
+  const coShares  = jointShares.slice(1);
+
+  // Update main deal
+  deal.gesamtbetragOriginal = originalAmount;
+  deal.gesamtbetrag  = Math.round(originalAmount * mainShare.pct / 100 * 100) / 100;
+  deal.joint         = jointShares;
+  deal.jointGroupId  = groupId;
+  deal.isJointMain   = true;
+  deal.isJointCopy   = false;
+  deal.status        = mainStatus;
+  deal.reason        = jointShares.map(s=>`${s.manager}: ${s.pct}%`).join(', ');
+
+  // Create a copy for each co-manager
+  coShares.forEach(share => {
+    const copy = Object.assign({}, deal, {
+      id: (deal.id||deal.bestellnummer) + '_jc_' + share.manager.replace(/\s+/g,''),
+      verkaeufer:    share.manager,
+      gesamtbetrag:  Math.round(originalAmount * share.pct / 100 * 100) / 100,
+      status:        DS.JOINT,
+      isJointCopy:   true,
+      isJointMain:   false,
+      jointGroupId:  groupId,
+      manualDocs:    deal.manualDocs || null,
+      reason:        jointShares.map(s=>`${s.manager}: ${s.pct}%`).join(', '),
+    });
+    APP.deals.push(copy);
+  });
+}
+
 function confirmManual(idx) {
   const ALL_DOC_IDS = ['gelang','fracht','ausgang','andere'];
   const docs = {};
   ALL_DOC_IDS.forEach(id => { docs[id] = document.getElementById('doc-'+id)?.checked || false; });
   const checkedDocs = ALL_DOC_IDS.filter(id => docs[id]);
   const docLabels = { gelang:'Gelangenbestätigung', fracht:'CMR/Frachtenbrief', ausgang:'Ausgangsvermerk', andere:'Другой документ' };
-  const docList = checkedDocs.map(id => docLabels[id]).join(', ');
+  const docList = checkedDocs.map(id => docLabels[id]).join(', ') || 'без доп. документов';
+
+  const deal = APP.deals[idx];
+  deal.manualDocs = docs;
 
   // Handle joint deal
   const isJoint = document.getElementById(`is-joint-${idx}`)?.checked;
-  let jointShares = null;
   if(isJoint) {
     const cont = document.getElementById(`joint-shares-${idx}`);
     const rows = cont ? cont.querySelectorAll('.bstep') : [];
@@ -2005,20 +2183,18 @@ function confirmManual(idx) {
     });
     if(shares.length) {
       const othersSum = shares.reduce((s,j)=>s+j.pct,0);
-      const mainPct = Math.round((100-othersSum)*100)/100;
+      const mainPct   = Math.round((100-othersSum)*100)/100;
       if(mainPct < 0) { alert(`Сумма долей участников (${othersSum}%) превышает 100%.`); return; }
-      const deal = APP.deals[idx];
-      jointShares = [{manager:(deal.verkaeufer||deal.verkaeufer||''), pct:mainPct}, ...shares];
+      deal.reason = `Подтверждена вручную: ${docList}`;
+      const jointShares = [{manager: deal.verkaeufer||'', pct: mainPct}, ...shares];
+      _applyJointSplit(idx, jointShares, DS.OK);
+    } else {
+      deal.status = DS.OK;
+      deal.reason = `Подтверждена вручную: ${docList}`;
     }
-  }
-
-  const deal = APP.deals[idx];
-  deal.status = jointShares ? DS.JOINT : DS.OK;
-  deal.manualDocs = docs;
-  deal.reason = `Подтверждена вручную: ${docList}`;
-  if(jointShares) {
-    deal.joint = jointShares;
-    deal.reason = jointShares.map(s=>`${s.manager}: ${s.pct}%`).join(', ');
+  } else {
+    deal.status = DS.OK;
+    deal.reason = `Подтверждена вручную: ${docList}`;
   }
 
   document.getElementById('confirm-modal')?.remove();
@@ -2061,36 +2237,171 @@ function mgrSelectHtml(selectedName, cls) {
 
 function openJoint(idx){
   const deal=APP.deals[idx];
-  const existing=deal.joint||[{manager:deal.verkaeufer,pct:100}];
   const rid=`jr-${idx}`;
   const existing_row=document.getElementById(rid);
   if(existing_row){existing_row.remove();return;}
   const tbl=document.querySelector('#prov-deals .tw table tbody');if(!tbl)return;
+
+  // Determine existing shares and full amount
+  const fullAmt = deal.gesamtbetragOriginal || deal.gesamtbetrag;
+  const existing = deal.joint && deal.joint.length
+    ? deal.joint
+    : [{manager: deal.verkaeufer||'', pct: 100}];
+
   const newRow=document.createElement('tr');newRow.id=rid;
   newRow.innerHTML=`<td colspan="12" style="background:#f0f4ff;padding:12px 16px">
     <div style="background:#fff;border:1.5px solid #bfdbfe;border-radius:10px;padding:14px">
-      <div class="sh" style="margin-bottom:10px">👥 Совместная: ${deal.bestellnummer} · ${fmt(deal.gesamtbetrag)} EUR</div>
+      <div class="sh" style="margin-bottom:6px">👥 Совместная сделка: ${eh(deal.bestellnummer)}</div>
+      <div style="font-size:12px;color:#666;margin-bottom:10px">
+        Полная сумма: <strong>${fmt(fullAmt)} EUR</strong>
+        ${deal.isJointMain?'<span style="color:#6d28d9;font-size:11px;margin-left:8px">⚠ Уже разделена — сохранение пересчитает заново</span>':''}
+      </div>
       <div style="display:grid;grid-template-columns:1fr 80px auto;gap:6px;margin-bottom:4px;font-size:10px;color:#aaa"><span>Менеджер</span><span>%</span><span></span></div>
-            <div id="jsh-${idx}">${existing.map((s,si)=>`<div class="bstep">${mgrSelectHtml(s.manager,'jm')}<input type="number" class="jp" value="${s.pct||''}" min="0" max="100" placeholder="%"><button class="bdel" onclick="this.parentElement.remove()">✕</button></div>`).join('')}</div>
-      <button class="badd" onclick="addJS('${idx}')">+ Участник</button>
+      <div id="jsh-${idx}">${existing.map(s=>`<div class="bstep">${mgrSelectHtml(s.manager,'jm')}<input type="number" class="jp" value="${s.pct||''}" min="0" max="100" placeholder="%" oninput="_previewJointSplit(${idx},${fullAmt})"><button class="bdel" onclick="this.parentElement.remove();_previewJointSplit(${idx},${fullAmt})">✕</button></div>`).join('')}</div>
+      <button class="badd" onclick="addJS('${idx}',${fullAmt})">+ Участник</button>
       <div id="jerr-${idx}" style="color:#c0392b;font-size:11px;margin-top:6px"></div>
+      <div id="jprev-${idx}" style="font-size:11px;color:#555;margin-top:8px;line-height:1.7"></div>
       <div style="display:flex;gap:8px;margin-top:10px">
-        <button class="btn btn-p btn-sm" onclick="saveJoint(${idx})">Сохранить</button>
+        <button class="btn btn-p btn-sm" onclick="saveJoint(${idx})">💾 Сохранить и разделить</button>
         <button class="btn btn-s btn-sm" onclick="document.getElementById('${rid}').remove()">Отмена</button>
       </div>
     </div></td>`;
   const rows=tbl.querySelectorAll('tr');let target=null;
   rows.forEach(r=>{if(r.cells[0]?.textContent?.trim()===deal.bestellnummer)target=r;});
   if(target)target.insertAdjacentElement('afterend',newRow);else tbl.appendChild(newRow);
+  _previewJointSplit(idx, fullAmt);
 }
-function addJS(idx){const c=document.getElementById(`jsh-${idx}`);if(!c)return;const d=document.createElement('div');d.className='bstep';d.innerHTML=mgrSelectHtml('','jm')+'<input type="number" class="jp" placeholder="%" min="0" max="100" style="border:1px solid #d0d4e0;border-radius:6px;padding:5px 8px;font-size:12px;background:#fff;width:90px"><button class="bdel" onclick="this.parentElement.remove()">✕</button>';c.appendChild(d);}
+
+function _previewJointSplit(idx, fullAmt){
+  const c=document.getElementById(`jsh-${idx}`);
+  const prev=document.getElementById(`jprev-${idx}`);
+  if(!c||!prev)return;
+  const shares=[];
+  c.querySelectorAll('.bstep').forEach(r=>{
+    const m=r.querySelector('.jm')?.value?.trim(), p=parseFloat(r.querySelector('.jp')?.value);
+    if(m&&!isNaN(p)) shares.push({manager:m,pct:p});
+  });
+  const total=shares.reduce((s,j)=>s+j.pct,0);
+  const lines=shares.map(s=>`<span style="color:#1a1a2e"><strong>${eh(s.manager)}</strong>: ${s.pct}% = <strong>${fmt(Math.round(fullAmt*s.pct/100*100)/100)} EUR</strong></span>`);
+  const ok=Math.abs(total-100)<0.01;
+  prev.innerHTML=lines.join(' &nbsp;|&nbsp; ')+'<br>'
+    +`<span style="color:${ok?'#1a7a3a':'#c0392b'}">Итого: ${total.toFixed(1)}% ${ok?'✓':'— должно быть 100%'}</span>`;
+}
+function addJS(idx,fullAmt){const c=document.getElementById(`jsh-${idx}`);if(!c)return;const d=document.createElement('div');d.className='bstep';d.innerHTML=mgrSelectHtml('','jm')+`<input type="number" class="jp" placeholder="%" min="0" max="100" style="border:1px solid #d0d4e0;border-radius:6px;padding:5px 8px;font-size:12px;background:#fff;width:90px" oninput="_previewJointSplit(${idx},${fullAmt})"><button class="bdel" onclick="this.parentElement.remove();_previewJointSplit(${idx},${fullAmt})">✕</button>`;c.appendChild(d);}
 function saveJoint(idx){
   const c=document.getElementById(`jsh-${idx}`);if(!c)return;
-  const shares=[];c.querySelectorAll('.bstep').forEach(r=>{const m=r.querySelector('.jm')?.value?.trim(),p=parseFloat(r.querySelector('.jp')?.value);if(m&&!isNaN(p))shares.push({manager:m,pct:p});});
+  const shares=[];
+  c.querySelectorAll('.bstep').forEach(r=>{
+    const m=r.querySelector('.jm')?.value?.trim(), p=parseFloat(r.querySelector('.jp')?.value);
+    if(m&&!isNaN(p)&&p>0) shares.push({manager:m,pct:p});
+  });
   const total=shares.reduce((s,j)=>s+j.pct,0);
-  if(Math.abs(total-100)>0.01){const e=document.getElementById(`jerr-${idx}`);if(e)e.textContent=`Сумма долей = ${total.toFixed(1)}%, должно быть 100%`;return;}
-  APP.deals[idx].joint=shares;APP.deals[idx].status=DS.JOINT;APP.deals[idx].reason=shares.map(s=>`${s.manager}: ${s.pct}%`).join(', ');
-  saveDeals(APP.deals);document.getElementById(`jr-${idx}`)?.remove();renderDeals();if(APP.raw)rerun();
+  if(Math.abs(total-100)>0.01){
+    const e=document.getElementById(`jerr-${idx}`);
+    if(e) e.textContent=`Сумма долей = ${total.toFixed(1)}%, должно быть 100%`;
+    return;
+  }
+  const deal=APP.deals[idx];
+  const mainStatus=deal.status===DS.AUTO||deal.status===DS.COUNTED?deal.status:DS.AUTO;
+  _applyJointSplit(idx, shares, mainStatus);
+  saveDeals(APP.deals);
+  document.getElementById(`jr-${idx}`)?.remove();
+  renderDeals();
+  if(APP.raw) rerun();
+}
+
+// ═══════════════════════════════════════════════════════════
+// RENDER: ALL PROV DEALS REGISTRY
+// ═══════════════════════════════════════════════════════════
+function renderProvAll() {
+  const cont = document.getElementById('prov-all'); if(!cont) return;
+  const ACTIVE = [DS.AUTO, DS.OK, DS.JOINT, DS.COUNTED];
+  const allDeals = (APP.deals||[]).filter(d => ACTIVE.includes(d.status));
+
+  if(!allDeals.length) {
+    cont.innerHTML = `<div class="eb" style="margin-top:14px">
+      <h4>Нет сделок в провизионе</h4>
+      <p style="font-size:12px;margin-top:4px">Загрузите JTL-выгрузку и зафиксируйте авто-закрытые или подтверждённые сделки.</p>
+    </div>`;
+    return;
+  }
+
+  // Manager list for filter
+  const mgrNames = [...new Set(allDeals.map(d=>(d.verkaeufer||'').trim()).filter(Boolean))].sort();
+  const selMgr = APP.provAllMgr || 'all';
+  const filt = selMgr === 'all' ? allDeals : allDeals.filter(d=>(d.verkaeufer||'').trim()===selMgr);
+  const total = filt.reduce((s,d)=>s+(d.gesamtbetrag||0),0);
+  const totalAll = allDeals.reduce((s,d)=>s+(d.gesamtbetrag||0),0);
+
+  // Status label helper
+  const stLabel = s => ({
+    [DS.AUTO]:'авто-закрыта',[DS.OK]:'подтверждена вручную',
+    [DS.JOINT]:'совм. копия',[DS.COUNTED]:'учтена в периоде'
+  }[s]||s);
+  const stColor = s => ({
+    [DS.AUTO]:'#16a34a',[DS.OK]:'#6d28d9',
+    [DS.JOINT]:'#2563eb',[DS.COUNTED]:'#9ca3af'
+  }[s]||'#888');
+
+  let h = `
+  <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:14px;margin-top:4px">
+    <div>
+      <label style="font-size:12px;color:#666;margin-right:6px">Менеджер:</label>
+      <select onchange="APP.provAllMgr=this.value;renderProvAll()"
+        style="border:1px solid #d0d4e0;border-radius:7px;padding:5px 10px;font-size:12px;background:#fff">
+        <option value="all" ${selMgr==='all'?'selected':''}>Все менеджеры</option>
+        ${mgrNames.map(m=>`<option value="${eh(m)}" ${selMgr===m?'selected':''}>${eh(m)}</option>`).join('')}
+      </select>
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <div class="card g" style="padding:8px 14px;min-width:140px">
+        <div class="clbl">Сделок к провизиону</div>
+        <div class="cval csm">${filt.length}</div>
+      </div>
+      <div class="card g" style="padding:8px 14px;min-width:160px">
+        <div class="clbl">${selMgr==='all'?'Общая сумма':'Сумма менеджера'}</div>
+        <div class="cval csm">${fmt(total)}</div>
+        <div class="csub">EUR брутто</div>
+      </div>
+      ${selMgr!=='all'?`<div class="card b" style="padding:8px 14px;min-width:160px">
+        <div class="clbl">Итого всех менеджеров</div>
+        <div class="cval csm" style="font-size:14px">${fmt(totalAll)}</div>
+        <div class="csub">EUR брутто</div>
+      </div>`:''}
+    </div>
+  </div>`;
+
+  if(!filt.length) {
+    h += `<div style="color:#aaa;font-size:13px;padding:16px 0">У этого менеджера нет сделок в провизионе.</div>`;
+    cont.innerHTML = h; return;
+  }
+
+  h += `<div class="tw"><table><thead><tr>
+    <th>Bestell-Nr</th><th>Datum</th><th>Verkaeufer</th><th>Firma</th>
+    <th>Plattform</th><th>Land</th><th>MwSt</th>
+    <th style="text-align:right">Betrag, EUR</th>
+    <th>Rechnung</th><th>Статус</th>
+  </tr></thead><tbody>
+  ${filt.map(d=>`<tr ${d.isJointCopy?'style="background:#f5f3ff"':d.isJointMain?'style="background:#f0fdf4"':''}>
+    <td class="mono" style="font-size:10px">${eh(d.bestellnummer)}${d.isJointCopy?'<br><span style="font-size:9px;color:#6d28d9">👥 копия</span>':d.isJointMain?'<br><span style="font-size:9px;color:#16a34a">👥 осн.</span>':''}</td>
+    <td style="font-size:11px">${eh(d.bestelldatum||'')}</td>
+    <td><strong>${eh(d.verkaeufer||'')}</strong></td>
+    <td style="max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${eh(d.firma||'')}">${eh(d.firma||'—')}</td>
+    <td style="font-size:11px">${eh(d.plattform||'')}</td>
+    <td>${eh(d.lieferland||'')}</td>
+    <td style="text-align:center">${d.mwst>0?d.mwst+'%':'<span class="tm">0%</span>'}</td>
+    <td style="text-align:right;font-weight:600" class="mono">${fmt(d.gesamtbetrag)}${d.gesamtbetragOriginal&&d.gesamtbetrag!==d.gesamtbetragOriginal?`<br><span style="font-size:9px;color:#aaa">из ${fmt(d.gesamtbetragOriginal)}</span>`:''}
+    </td>
+    <td style="font-size:10px" class="mono">${eh(d.rechnungsnummer||'—')}</td>
+    <td><span style="font-size:11px;font-weight:500;color:${stColor(d.status)}">${stLabel(d.status)}</span></td>
+  </tr>`).join('')}
+  </tbody></table></div>
+  <div style="display:flex;justify-content:flex-end;align-items:center;gap:16px;margin-top:10px;padding-top:8px;border-top:2px solid #eee">
+    <span style="font-size:12px;color:#666">Показано ${filt.length} сделок</span>
+    <span style="font-size:14px;font-weight:700;color:#1a1a2e">Итого: ${fmt(total)} EUR</span>
+  </div>`;
+
+  cont.innerHTML = h;
 }
 
 // ═══════════════════════════════════════════════════════════
