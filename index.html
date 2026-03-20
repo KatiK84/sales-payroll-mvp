@@ -340,7 +340,7 @@ function epill(e){ return e==='полная занятость'?`<span class="pi
 function goTab(id) {
   APP.currentTab = id;
   document.querySelectorAll('.tab').forEach((b,i)=>{
-    const tabs=['ov','fp','prov','ded','hist','mgr','prev','str'];
+    const tabs=['ov','fp','prov','ded','hist','mgr','prev','ved','str'];
     b.classList.toggle('active', tabs[i]===id);
   });
   document.querySelectorAll('.pane').forEach(p=>p.classList.toggle('active',p.id==='pane-'+id));
@@ -1699,6 +1699,10 @@ function statusBadge(s){
 
 function renderDeals() {
   const cont=document.getElementById('prov-deals');if(!cont)return;
+  // Save search input focus & cursor before re-render
+  const _prevActive=document.activeElement;
+  const _searchFocused=_prevActive&&_prevActive.id==='prov-search-input';
+  const _cursor=_searchFocused?_prevActive.selectionStart:null;
   const deals=APP.deals||[];
   const jtlEmpty = deals.length === 0;
   const showJtlWarn = jtlEmpty && anyProvConfigured();
@@ -1785,7 +1789,7 @@ function renderDeals() {
     ${[['all',`Все (${deals.length})`],['avto',`Авто-закрытые (${cnt(DS.AUTO)})`],['kv',`Карантин (${cnt(DS.QUAR)})`],['manual',`Ручная проверка (${cnt(DS.MANUAL)})`],['excl',`Исключены (${cnt(DS.EXCL)})`],['dup',`Дубли (${cnt(DS.DUP)})`],['joint',`Совместные (${cnt(DS.JOINT)})`]].map(([k,l])=>`<button class="stab ${APP.provFilter===k?'active':''}" onclick="setProvFilt('${k}')">${l}</button>`).join('')}
   </div>
   <div class="ved-filter" style="margin-bottom:12px">
-    <input type="text" placeholder="🔍 Поиск по Bestell-Nr / Rechnung-Nr…" value="${eh(APP.provSearch||'')}"
+    <input id="prov-search-input" type="text" placeholder="🔍 Поиск по Bestell-Nr / Rechnung-Nr…" value="${eh(APP.provSearch||'')}"
       oninput="APP.provSearch=this.value;renderDeals()" style="width:280px">
     ${APP.provSearch?`<button class="btn btn-s btn-sm" onclick="APP.provSearch='';renderDeals()">✕</button>`:''}
     ${provSearch&&filt.length!==deals.length?`<span style="font-size:11px;color:#888">Найдено: ${filt.length}</span>`:''}
@@ -1832,6 +1836,11 @@ function renderDeals() {
     <p style="font-size:11px;color:#aaa;margin-top:6px">Показано ${filt.length} из ${deals.length}</p>`;
   }
   cont.innerHTML=h;
+  // Restore search input focus & cursor after re-render
+  if(_searchFocused){
+    const _inp=document.getElementById('prov-search-input');
+    if(_inp){_inp.focus();if(_cursor!==null)_inp.setSelectionRange(_cursor,_cursor);}
+  }
 }
 function setProvFilt(f){APP.provFilter=f;renderDeals();}
 function clearDeals(){if(!confirm('Очистить реестр сделок?'))return;APP.deals=[];saveDeals(APP.deals);renderDeals();if(APP.raw)rerun();}
