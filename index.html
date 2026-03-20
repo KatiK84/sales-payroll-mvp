@@ -313,7 +313,7 @@ function saveProv(v) { lsSet(LS.prov,v); }
 const APP = {
   raw:null, fileName:'', sheetName:'', payroll:null,
   managers:null, dedup:null, hist:null, deals:null, ddDedup:null, provSettings:null,
-  provFilter:'all', provSearch:'', fpMgrFilter:'',
+  provFilter:'all', provSearch:'', provSort:null, fpMgrFilter:'',
   histView:null, currentTab:'ov', histDetailTab:'summary', selMonth:null, selYear:null,
 };
 
@@ -325,6 +325,14 @@ function excelDate(n) {
   return String(d.getUTCDate()).padStart(2,'0')+'.'+String(d.getUTCMonth()+1).padStart(2,'0')+'.'+d.getUTCFullYear();
 }
 function sv(v) { if(v==null)return''; if(typeof v==='number'&&v>40000&&v<70000)return excelDate(v); return String(v).trim(); }
+// Parse JTL date "DD.MM.YY HH:MM" or "DD.MM.YYYY" → timestamp for sorting
+function _parseDealDate(s){
+  if(!s)return 0;
+  const m=String(s).match(/^(\d{1,2})\.(\d{1,2})\.(\d{2,4})/);
+  if(!m)return 0;
+  let y=parseInt(m[3]);if(y<100)y+=2000;
+  return new Date(y,parseInt(m[2])-1,parseInt(m[1])).getTime();
+}
 function nv(v) { if(v==null||v==='')return 0; const x=parseFloat(String(v).replace(',','.')); return isNaN(x)?0:x; }
 function fmt(v) { if(!v&&v!==0)return'—'; if(v===0)return'0,00'; return v.toLocaleString('de-DE',{minimumFractionDigits:2,maximumFractionDigits:2}); }
 function eh(s) { return String(s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;'); }
@@ -1713,8 +1721,15 @@ function renderDeals() {
   const fmap={all:null,avto:DS.AUTO,kv:DS.QUAR,manual:DS.MANUAL,excl:DS.EXCL,dup:DS.DUP,joint:DS.JOINT};
   const fst=fmap[APP.provFilter];
   const provSearch=(APP.provSearch||'').toLowerCase().trim();
-  const filt=(fst?deals.filter(d=>d.status===fst):deals)
+  let filt=(fst?deals.filter(d=>d.status===fst):deals)
     .filter(d=>!provSearch||(d.bestellnummer||'').toLowerCase().includes(provSearch)||(d.rechnungsnummer||'').toLowerCase().includes(provSearch));
+  // Sort by date if quarantine filter active
+  if(APP.provFilter==='kv'&&APP.provSort){
+    filt=[...filt].sort((a,b)=>{
+      const pa=_parseDealDate(a.bestelldatum),pb=_parseDealDate(b.bestelldatum);
+      return APP.provSort==='asc'?pa-pb:pb-pa;
+    });
+  }
   const cnt=s=>deals.filter(d=>d.status===s).length;
   const totAmt=deals.filter(d=>d.status===DS.AUTO||d.status===DS.OK||d.status===DS.JOINT||d.status===DS.COUNTED).reduce((s,d)=>s+(d.gesamtbetrag||0),0);
   let h='';
@@ -1791,11 +1806,17 @@ function renderDeals() {
   h+=`<div class="stabs" style="margin-bottom:8px">
     ${[['all',`Все (${deals.length})`],['avto',`Авто-закрытые (${cnt(DS.AUTO)})`],['kv',`Карантин (${cnt(DS.QUAR)})`],['manual',`Ручная проверка (${cnt(DS.MANUAL)})`],['excl',`Исключены (${cnt(DS.EXCL)})`],['dup',`Дубли (${cnt(DS.DUP)})`],['joint',`Совместные (${cnt(DS.JOINT)})`]].map(([k,l])=>`<button class="stab ${APP.provFilter===k?'active':''}" onclick="setProvFilt('${k}')">${l}</button>`).join('')}
   </div>
-  <div class="ved-filter" style="margin-bottom:12px">
+  <div class="ved-filter" style="margin-bottom:12px;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
     <input id="prov-search-input" type="text" placeholder="🔍 Поиск по Bestell-Nr / Rechnung-Nr…" value="${eh(APP.provSearch||'')}"
       oninput="APP.provSearch=this.value;renderDeals()" style="width:280px">
     ${APP.provSearch?`<button class="btn btn-s btn-sm" onclick="APP.provSearch='';renderDeals()">✕</button>`:''}
     ${provSearch&&filt.length!==deals.length?`<span style="font-size:11px;color:#888">Найдено: ${filt.length}</span>`:''}
+    ${APP.provFilter==='kv'?`
+    <span style="font-size:11px;color:#888;margin-left:4px">Сортировка по дате:</span>
+    <button class="btn btn-sm ${APP.provSort==='asc'?'btn-ok':'btn-s'}" onclick="APP.provSort='asc';renderDeals()" title="Сначала старые">↑ Старые</button>
+    <button class="btn btn-sm ${APP.provSort==='desc'?'btn-ok':'btn-s'}" onclick="APP.provSort='desc';renderDeals()" title="Сначала новые">↓ Новые</button>
+    ${APP.provSort?`<button class="btn btn-sm btn-d" onclick="APP.provSort=null;renderDeals()" title="Сбросить сортировку">✕</button>`:''}
+    `:''}
   </div>`;
   if(!deals.length){
     if(showJtlWarn){ h+=jtlWarningHtml('prov'); }
