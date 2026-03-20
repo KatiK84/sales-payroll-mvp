@@ -1595,10 +1595,13 @@ function classifyJTL(row, excl, ddDedup) {
     return{status:DS.DUP,reason:`Уже учтена в провизионе${pNote}`,dk};
   }
   if(excl.includes(plat))return{status:DS.EXCL,reason:`Платформа исключена: ${plat}`,dk};
-  if(isNaN(mwst)||mwst===0)return{status:DS.MANUAL,reason:'MwSt = 0 → ручная проверка',dk};
-  if(rech&&(lief||vers))return{status:DS.AUTO,reason:'Rechnung + Lieferschein/Versanddatum',dk};
+  if(rech&&(lief||vers)){
+    if(isNaN(mwst)||mwst===0)return{status:DS.MANUAL,reason:'MwSt = 0 → ручная проверка (документы есть)',dk};
+    return{status:DS.AUTO,reason:'Rechnung + Lieferschein/Versanddatum',dk};
+  }
   const miss=[];if(!rech)miss.push('Rechnungsnummer');if(!lief&&!vers)miss.push('Lieferschein/Versanddatum');
-  return{status:DS.QUAR,reason:`Карантин: нет ${miss.join(', ')}`,dk};
+  const mwstNote=(isNaN(mwst)||mwst===0)?' + MwSt=0':'';
+  return{status:DS.QUAR,reason:`Карантин: нет ${miss.join(', ')}${mwstNote}`,dk};
 }
 
 function parseCSV(text) {
@@ -1849,19 +1852,13 @@ function mOK(idx) {
   // Remove any existing modal
   document.getElementById('confirm-modal')?.remove();
 
-  // Required base docs: at least one of Rechnung OR Lieferschein must be checked
-  const BASE_DOCS = [
-    { id:'has_rechnung',    label:'Rechnung vorhanden', desc:'Счёт-фактура присутствует (обязательно)', required:true },
-    { id:'has_lieferschein',label:'Lieferschein vorhanden', desc:'Накладная/Lieferschein присутствует (обязательно)', required:true },
-  ];
-  // Additional docs for MwSt=0% cases
-  const EXTRA_DOCS = [
+  // Additional docs for MwSt=0% cases (Rechnung+Lieferschein already confirmed by status)
+  const ALL_DOCS = [
     { id:'gelang', label:'Gelangenbestätigung', desc:'Подтверждение получения товара в ЕС (для 0% MwSt)' },
     { id:'fracht', label:'Frachtenbrief / CMR', desc:'Транспортная накладная (с 3 штампами для CMR)' },
     { id:'ausgang', label:'Ausgangsvermerk', desc:'Подтверждение таможенного вывоза' },
     { id:'andere', label:'Другой документ', desc:'Иной подтверждающий документ' },
   ];
-  const ALL_DOCS = [...BASE_DOCS, ...EXTRA_DOCS];
 
   // Pre-check existing docs
   const existing = deal.manualDocs || {};
@@ -1878,8 +1875,7 @@ function mOK(idx) {
       <h3>📋 Подтверждение сделки</h3>
       <div class="sub">${eh(deal.bestellnummer)} · ${eh(deal.verkaeufer)} · ${eh(deal.firma||'')} · <strong>${(deal.gesamtbetrag||0).toLocaleString('de-DE',{minimumFractionDigits:2})} EUR</strong></div>
       <div class="modal-note">
-        MwSt = 0% — для закрытия необходимо наличие хотя бы <strong>Rechnung</strong> или <strong>Lieferschein</strong>.<br>
-        Отметьте имеющиеся документы и нажмите «Подтвердить и закрыть».
+        MwSt = 0% — Rechnung и Lieferschein подтверждены. Отметьте дополнительные документы при наличии и нажмите «Подтвердить и закрыть».
       </div>
       <div class="doc-list">
         ${ALL_DOCS.map(d => `
@@ -1892,10 +1888,6 @@ function mOK(idx) {
           </div>
         </label>`).join('')}
       </div>
-      <div id="manual-req-err" style="color:#c0392b;font-size:12px;margin-bottom:10px;display:none">
-        ⚠ Необходимо отметить хотя бы Rechnung или Lieferschein для закрытия сделки.
-      </div>
-
       <!-- Совместная сделка -->
       <div style="margin-top:14px;padding-top:12px;border-top:1px solid #eee">
         <label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-size:13px">
@@ -1928,8 +1920,6 @@ function mOK(idx) {
   // Close on overlay click
   modal.addEventListener('click', () => modal.remove());
   document.body.appendChild(modal);
-  // Initial check
-  _checkManualReq(idx);
 }
 
 function _checkManualReq(idx) {
@@ -1973,20 +1963,11 @@ function _updateJointTotal(idx) {
 }
 
 function confirmManual(idx) {
-  // Validate required docs
-  const hasRech = document.getElementById('doc-has_rechnung')?.checked;
-  const hasLief = document.getElementById('doc-has_lieferschein')?.checked;
-  if(!hasRech && !hasLief) {
-    const errEl = document.getElementById('manual-req-err');
-    if(errEl){ errEl.style.display='block'; errEl.scrollIntoView({block:'nearest'}); }
-    return;
-  }
-
-  const ALL_DOC_IDS = ['has_rechnung','has_lieferschein','gelang','fracht','ausgang','andere'];
+  const ALL_DOC_IDS = ['gelang','fracht','ausgang','andere'];
   const docs = {};
   ALL_DOC_IDS.forEach(id => { docs[id] = document.getElementById('doc-'+id)?.checked || false; });
   const checkedDocs = ALL_DOC_IDS.filter(id => docs[id]);
-  const docLabels = { has_rechnung:'Rechnung', has_lieferschein:'Lieferschein', gelang:'Gelangenbestätigung', fracht:'CMR/Frachtenbrief', ausgang:'Ausgangsvermerk', andere:'Другой документ' };
+  const docLabels = { gelang:'Gelangenbestätigung', fracht:'CMR/Frachtenbrief', ausgang:'Ausgangsvermerk', andere:'Другой документ' };
   const docList = checkedDocs.map(id => docLabels[id]).join(', ');
 
   // Handle joint deal
@@ -2124,6 +2105,30 @@ window.addEventListener('load', function() {
   APP.deals       = loadDeals();
   APP.ddDedup     = loadDDDedup();
   APP.provSettings= loadProv();
+  // Reclassify stored deals with updated logic
+  (function reclassifyStoredDeals(){
+    const excl=APP.provSettings.excludedPlatforms||[];
+    let changed=false;
+    (APP.deals||[]).forEach(d=>{
+      if([DS.DUP,DS.EXCL,DS.OK,DS.JOINT,DS.COUNTED].includes(d.status))return;
+      const rech=(d.rechnungsnummer||'').trim();
+      const lief=(d.lieferschein||'').trim();
+      const vers=(d.versanddatum||'').trim();
+      const mwst=d.mwst;
+      let ns,nr;
+      if(excl.includes(d.plattform||'')){ns=DS.EXCL;nr=`Платформа исключена: ${d.plattform}`;}
+      else if(rech&&(lief||vers)){
+        if(isNaN(mwst)||mwst===0){ns=DS.MANUAL;nr='MwSt = 0 → ручная проверка (документы есть)';}
+        else{ns=DS.AUTO;nr='Rechnung + Lieferschein/Versanddatum';}
+      } else {
+        const miss=[];if(!rech)miss.push('Rechnungsnummer');if(!lief&&!vers)miss.push('Lieferschein/Versanddatum');
+        const mn=(isNaN(mwst)||mwst===0)?' + MwSt=0':'';
+        ns=DS.QUAR;nr=`Карантин: нет ${miss.join(', ')}${mn}`;
+      }
+      if(d.status!==ns){d.status=ns;d.reason=nr;changed=true;}
+    });
+    if(changed)saveDeals(APP.deals);
+  })();
   renderMgr();
   renderHist();
   renderDeals();
